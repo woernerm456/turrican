@@ -4,19 +4,11 @@ let rafCb = null;
 const noop = () => {};
 const gradient = { addColorStop: noop };
 const ctxStub = new Proxy({}, {
-  get(t, k) {
-    if (k === 'createLinearGradient') return () => gradient;
-    if (!(k in t)) t[k] = noop;
-    return t[k];
-  },
+  get(t, k) { if (k === 'createLinearGradient') return () => gradient; if (!(k in t)) t[k] = noop; return t[k]; },
   set(t, k, v) { t[k] = v; return true; },
 });
 const canvasStub = { width: 960, height: 540, style: {}, getContext: () => ctxStub };
-global.window = {
-  innerWidth: 960,
-  innerHeight: 540,
-  addEventListener: (type, fn) => { (handlers[type] = handlers[type] || []).push(fn); },
-};
+global.window = { innerWidth: 960, innerHeight: 540, addEventListener: (t, f) => { (handlers[t] = handlers[t] || []).push(f); } };
 global.document = { getElementById: () => canvasStub };
 global.requestAnimationFrame = (cb) => { rafCb = cb; };
 require('./game.js');
@@ -25,14 +17,7 @@ const G = global.window.__STARBLASTER__;
 
 const TILE = 32, ROWS = 17, COLS = 160;
 let ts = 0;
-function step(n) {
-  for (let i = 0; i < n; i++) {
-    ts += 16.7;
-    const cb = rafCb;
-    rafCb = null;
-    cb(ts);
-  }
-}
+function step(n) { for (let i = 0; i < n; i++) { ts += 16.7; const cb = rafCb; rafCb = null; cb(ts); } }
 
 function snapshot(label) {
   const p = G.player;
