@@ -206,31 +206,31 @@ function buildStationLevel() {
 function spawnFromMap() {
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
     const c = map[y][x];
-    if (c === 'P') { spawn = { x: x * TILE + 6, y: y * TILE + 2 }; map[y][x] = ' '; }
-    else if (c === 'G') { goal = { x: x * TILE, y: y * TILE, w: TILE, h: TILE * 2 }; map[y][x] = ' '; }
+    if (c === 'P') { spawn = { x: x * TILE - 4, y: y * TILE - 24 }; map[y][x] = ' '; }
+    else if (c === 'G') { goal = { x: x * TILE - 16, y: y * TILE - 64, w: TILE * 2, h: TILE * 4 }; map[y][x] = ' '; }
     else if (c === 'e') {
-      enemies.push({ type: 'walker', x: x * TILE + 4, y: y * TILE, w: 24, h: 24, vx: 0, vy: 0, dir: Math.random() < 0.5 ? -1 : 1, hp: 2, flash: 0, onGround: false });
+      enemies.push({ type: 'walker', x: x * TILE - 8, y: y * TILE - 16, w: 48, h: 48, vx: 0, vy: 0, dir: Math.random() < 0.5 ? -1 : 1, hp: 2, flash: 0, onGround: false });
       map[y][x] = ' ';
     } else if (c === 'f') {
-      enemies.push({ type: 'flyer', x: x * TILE + 4, y: y * TILE, baseY: y * TILE, w: 22, h: 18, dir: 1, hp: 1, flash: 0, t: 0 });
+      enemies.push({ type: 'flyer', x: x * TILE - 6, y: y * TILE - 2, baseY: y * TILE, w: 44, h: 36, dir: 1, hp: 1, flash: 0, t: 0 });
       map[y][x] = ' ';
     } else if (c === 't') {
-      enemies.push({ type: 'turret', blue: level === 2, double: level === 2, x: x * TILE + 2, y: y * TILE + 6, w: 28, h: 26, vx: 0, vy: 0, hp: 3, flash: 0, fire: 60 + Math.floor(Math.random() * 60), onGround: false });
+      enemies.push({ type: 'turret', blue: level === 2, double: level === 2, x: x * TILE - 12, y: y * TILE - 20, w: 56, h: 52, vx: 0, vy: 0, hp: 3, flash: 0, fire: 60 + Math.floor(Math.random() * 60), onGround: false });
       map[y][x] = ' ';
     } else if (c === 'r') {
-      enemies.push({ type: 'robot', x: x * TILE + 3, y: y * TILE + 6, w: 26, h: 26, vx: 0, vy: 0, dir: Math.random() < 0.5 ? -1 : 1, hp: 3, flash: 0, onGround: false, atkCd: 90 + Math.floor(Math.random() * 60) });
+      enemies.push({ type: 'robot', x: x * TILE - 10, y: y * TILE - 20, w: 52, h: 52, vx: 0, vy: 0, dir: Math.random() < 0.5 ? -1 : 1, hp: 3, flash: 0, onGround: false, atkCd: 90 + Math.floor(Math.random() * 60) });
       map[y][x] = ' ';
     } else if (c === 's') {
-      enemies.push({ type: 'fish', big: false, x: x * TILE + 3, y: y * TILE, baseY: y * TILE, w: 26, h: 16, dir: Math.random() < 0.5 ? -1 : 1, hp: 2, flash: 0, t: Math.floor(Math.random() * 40) });
+      enemies.push({ type: 'fish', big: false, x: x * TILE - 10, y: y * TILE - 8, baseY: y * TILE, w: 52, h: 32, dir: Math.random() < 0.5 ? -1 : 1, hp: 2, flash: 0, t: Math.floor(Math.random() * 40) });
       map[y][x] = ' ';
     } else if (c === 'F') {
-      enemies.push({ type: 'fish', big: true, x: x * TILE - 16, y: y * TILE - 8, baseY: y * TILE, w: 64, h: 36, dir: -1, hp: 8, flash: 0, t: 0, fire: 60 });
+      enemies.push({ type: 'fish', big: true, x: x * TILE - 48, y: y * TILE - 20, baseY: y * TILE, w: 128, h: 72, dir: -1, hp: 8, flash: 0, t: 0, fire: 60 });
       map[y][x] = ' ';
     } else if (c === 'd') {
-      enemies.push({ type: 'dreher', big: false, x: x * TILE + 1, y: y * TILE + 1, w: 30, h: 30, dir: 1, hp: 4, flash: 0, t: 0, rot: 0, fire: 90 + Math.floor(Math.random() * 60) });
+      enemies.push({ type: 'dreher', big: false, x: x * TILE - 14, y: y * TILE - 14, w: 60, h: 60, dir: 1, hp: 4, flash: 0, t: 0, rot: 0, fire: 90 + Math.floor(Math.random() * 60) });
       map[y][x] = ' ';
     } else if (c === 'D') {
-      enemies.push({ type: 'dreher', big: true, x: x * TILE - 12, y: y * TILE - 12, w: 56, h: 56, dir: 1, hp: 8, flash: 0, t: 0, rot: 0, fire: 60 + Math.floor(Math.random() * 40) });
+      enemies.push({ type: 'dreher', big: true, x: x * TILE - 40, y: y * TILE - 40, w: 112, h: 112, dir: 1, hp: 8, flash: 0, t: 0, rot: 0, fire: 60 + Math.floor(Math.random() * 40) });
       map[y][x] = ' ';
     } else if (c === 'o' || c === 'O' || c === 'H' || c === 'W') {
       pickups.push({ x: x * TILE + TILE / 2, y: y * TILE + TILE / 2, type: c, t: Math.random() * 6 });
@@ -637,7 +637,7 @@ function updatePickups() {
     const bobY = pk.y + Math.sin(pk.t) * 3;
     const dx = (p.x + p.w / 2) - pk.x;
     const dy = (p.y + p.h / 2) - bobY;
-    if (Math.abs(dx) < 22 && Math.abs(dy) < 26) {
+    if (Math.abs(dx) < 44 && Math.abs(dy) < 52) {
       pk.dead = true;
       if (pk.type === 'o') { score += 100; sfx.coin(); addText('+100', pk.x, bobY - 10, '#22d3ee'); }
       else if (pk.type === 'O') { score += 500; sfx.coin(); addText('+500', pk.x, bobY - 10, '#e879f9'); }
@@ -1033,6 +1033,10 @@ function drawTiles() {
 function drawGoal() {
   if (!goal) return;
   const cx = goal.x + goal.w / 2, cy = goal.y + goal.h / 2;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(2, 2);
+  ctx.translate(-cx, -cy);
   for (let i = 0; i < 3; i++) {
     ctx.strokeStyle = i % 2 ? 'rgba(232,121,249,0.85)' : 'rgba(34,211,238,0.85)';
     ctx.lineWidth = 3 - i * 0.6;
@@ -1040,11 +1044,16 @@ function drawGoal() {
     ctx.ellipse(cx, cy, 14 - i * 3 + Math.sin(frameNo * 0.08 + i) * 2, goal.h / 2 - i * 4 + Math.cos(frameNo * 0.06 + i) * 2, 0, 0, 7);
     ctx.stroke();
   }
+  ctx.restore();
 }
 
 function drawPickups() {
   for (const pk of pickups) {
     const y = pk.y + Math.sin(pk.t) * 3;
+    ctx.save();
+    ctx.translate(pk.x, y);
+    ctx.scale(2, 2);
+    ctx.translate(-pk.x, -y);
     if (pk.type === 'o') {
       ctx.fillStyle = '#22d3ee';
       ctx.beginPath();
@@ -1076,6 +1085,7 @@ function drawPickups() {
       }
       ctx.closePath(); ctx.fill();
     }
+    ctx.restore();
   }
 }
 
@@ -1085,7 +1095,7 @@ function drawEnemies() {
     ctx.save();
     ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
     if (e.type === 'walker') {
-      if (e.dir < 0) ctx.scale(-1, 1);
+      ctx.scale(e.dir * 2, 2);
       ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#7f1d1d';
       ctx.beginPath(); ctx.arc(0, 0, 11, 0, 7); ctx.fill();
       ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#b91c1c';
@@ -1103,6 +1113,7 @@ function drawEnemies() {
       ctx.fillRect(-9, 9, 7, 4);
       ctx.fillRect(2, 9, 7, 4);
     } else if (e.type === 'flyer') {
+      ctx.scale(2, 2);
       const f = Math.sin(frameNo * 0.4 + e.t) * 6;
       ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#7f1d1d';
       ctx.beginPath(); ctx.ellipse(0, 0, 9, 7, 0, 0, 7); ctx.fill();
@@ -1117,7 +1128,7 @@ function drawEnemies() {
       ctx.beginPath(); ctx.arc(0, -1, 3, 0, 7); ctx.fill();
     } else if (e.type === 'fish') {
       const RX = e.big ? 32 : 13, RY = e.big ? 18 : 8;
-      if (e.dir < 0) ctx.scale(-1, 1);
+      ctx.scale(e.dir * 2, 2);
       ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#166534';
       ctx.beginPath(); ctx.ellipse(0, 0, RX, RY, 0, 0, 7); ctx.fill();
       ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#22c55e';
@@ -1132,6 +1143,7 @@ function drawEnemies() {
     } else if (e.type === 'dreher') {
       const R = e.big ? 24 : 13;
       const spokes = e.big ? 8 : 6;
+      ctx.scale(2, 2);
       ctx.rotate(e.rot);
       ctx.fillStyle = e.flash > 0 ? '#ffffff' : (e.big ? '#450a0a' : '#7f1d1d');
       ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.fill();
@@ -1148,7 +1160,7 @@ function drawEnemies() {
       ctx.fillStyle = '#fbbf24';
       ctx.beginPath(); ctx.arc(0, 0, e.big ? 7 : 4, 0, 7); ctx.fill();
     } else if (e.type === 'robot') {
-      if (e.dir < 0) ctx.scale(-1, 1);
+      ctx.scale(e.dir * 2, 2);
       ctx.fillStyle = '#1e293b';
       ctx.fillRect(-10, 8, 8, 6);
       ctx.fillRect(2, 8, 8, 6);
@@ -1173,6 +1185,7 @@ function drawEnemies() {
       ctx.fillStyle = e.flash > 0 ? '#ffffff' : dome;
       ctx.fillRect(-9, -6, 18, 12);
       const a = Math.atan2((player.y + player.h / 2) - (e.y + e.h / 2), (player.x + player.w / 2) - (e.x + e.w / 2));
+      ctx.scale(2, 2);
       ctx.rotate(a);
       ctx.fillStyle = barrel;
       ctx.fillRect(0, -3, 16, 6);
