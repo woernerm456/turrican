@@ -3,6 +3,8 @@
 const TILE = 32, ROWS = 17, COLS = 160;
 const W = 960, H = 540;
 const GRAV = 0.55, MAXFALL = 13, RUN = 3.2, JUMPV = -20.41875;
+const BULLET_DMG = 0.5;
+const FUEL_MAX = 600;
 
 let canvas, ctx;
 let map = [];
@@ -351,6 +353,16 @@ function tryFire(p, dx, dy, left, right) {
   sfx.shoot();
 }
 
+function tryRocket() {
+  const p = player;
+  if (!p || p.rocketCd > 0 || state !== 'play') return;
+  p.rocketCd = 600;
+  const ox = p.x + p.w / 2, oy = p.y + p.h / 2;
+  bullets.push({ x: ox + p.aim.x * 24, y: oy + p.aim.y * 24, vx: p.aim.x * 7, vy: p.aim.y * 7, rocket: true });
+  shake = Math.max(shake, 8);
+  sfx.boom();
+}
+
 function updatePlayer() {
   const p = player;
   const left = kd('ArrowLeft') || kd('KeyA');
@@ -359,6 +371,8 @@ function updatePlayer() {
   const down = kd('ArrowDown') || kd('KeyS');
   const jump = kd('KeyZ') || kd('Space');
   const fire = kd('KeyX') || kd('KeyJ');
+  const jet = kd('KeyC') || kd('ShiftLeft') || kd('ShiftRight');
+  if (edge.KeyV) tryRocket();
   const dx = (right ? 1 : 0) - (left ? 1 : 0);
   const dy = (down ? 1 : 0) - (up ? 1 : 0);
   if (dx !== 0) {
@@ -386,6 +400,15 @@ function updatePlayer() {
   }
   if (!jump && p.vy < 0) p.vy *= 0.88;
   p.vy = Math.min(MAXFALL, p.vy + GRAV);
+  if (jet && p.fuel > 0) {
+    p.fuel = Math.max(0, p.fuel - 1);
+    p.vy = Math.max(p.vy - 1.6, -7);
+    if (frameNo % 4 === 0) puff(p.x + p.w / 2, p.y + p.h, 2, '#ffb03d');
+    if (frameNo % 12 === 0) beep(140, 0.05, 'sawtooth', 0.03, 30);
+  } else if (p.fuel < FUEL_MAX) {
+    p.fuel = Math.min(FUEL_MAX, p.fuel + FUEL_MAX / 300);
+  }
+  if (p.rocketCd > 0) p.rocketCd--;
   moveAndCollide(p);
   if (p.y > ROWS * TILE + 40) {
     p.x = spawn.x;
@@ -562,12 +585,19 @@ function updateBullets() {
     }
     for (const e of enemies) {
       if (e.dead) continue;
-      if (b.x > e.x - 3 && b.x < e.x + e.w + 3 && b.y > e.y - 3 && b.y < e.y + e.h + 3) {
+      if (b.x > e.x - 6 && b.x < e.x + e.w + 6 && b.y > e.y - 6 && b.y < e.y + e.h + 6) {
         b.dead = true;
-        e.hp--;
+        e.hp -= b.rocket ? 4 * BULLET_DMG : BULLET_DMG;
         e.flash = 6;
         if (e.type === 'walker') e.vx += b.vx * 0.15;
-        burst(b.x, b.y, 5, '#ffffff');
+        if (b.rocket) {
+          burst(b.x, b.y, 18, '#ffb03d');
+          burst(b.x, b.y, 10, '#ff4d5e');
+          shake = Math.max(shake, 8);
+          sfx.boom();
+        } else {
+          burst(b.x, b.y, 5, '#ffffff');
+        }
         if (e.hp <= 0) killEnemy(e);
         break;
       }
@@ -653,7 +683,7 @@ function startGame(resetAll) {
   goal = null;
   spawn = { x: 64, y: 400 };
   spawnFromMap();
-  player = { x: spawn.x, y: spawn.y, w: 20, h: 28, vx: 0, vy: 0, dir: 1, onGround: false, coyote: 0, jumpBuf: 0, fireCd: 0, invuln: 90, hp: 3, weapon: wpn, aim: { x: 1, y: 0 } };
+  player = { x: spawn.x, y: spawn.y, w: 40, h: 56, vx: 0, vy: 0, dir: 1, onGround: false, coyote: 0, jumpBuf: 0, fireCd: 0, invuln: 90, hp: 3, weapon: wpn, aim: { x: 1, y: 0 }, fuel: FUEL_MAX, rocketCd: 0 };
   shake = 0;
   cam.x = 0;
   state = 'play';
@@ -668,6 +698,8 @@ function respawn() {
   player.vy = 0;
   player.hp = 3;
   player.invuln = 120;
+  player.fuel = FUEL_MAX;
+  player.rocketCd = 0;
   ebullets = [];
   cam.x = Math.max(0, Math.min(COLS * TILE - W, spawn.x - W / 2 + 200));
   state = 'play';
@@ -698,6 +730,8 @@ function readGamepad() {
     KeyR: bp(9),
     KeyP: bp(8),
     KeyM: bp(4),
+    KeyC: bp(5),
+    KeyV: bp(6),
   };
   for (const code of Object.keys(want)) {
     const p = !!want[code];
@@ -1151,10 +1185,19 @@ function drawEnemies() {
 
 function drawBullets() {
   for (const b of bullets) {
-    ctx.fillStyle = 'rgba(255,220,80,0.35)';
-    ctx.beginPath(); ctx.arc(b.x, b.y, 7, 0, 7); ctx.fill();
-    ctx.fillStyle = '#ffe066';
-    ctx.beginPath(); ctx.arc(b.x, b.y, 3.5, 0, 7); ctx.fill();
+    if (b.rocket) {
+      ctx.fillStyle = 'rgba(255,140,40,0.4)';
+      ctx.beginPath(); ctx.arc(b.x, b.y, 11, 0, 7); ctx.fill();
+      ctx.fillStyle = '#ffb03d';
+      ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, 7); ctx.fill();
+      ctx.fillStyle = '#fff7ed';
+      ctx.beginPath(); ctx.arc(b.x - b.vx, b.y - b.vy, 3, 0, 7); ctx.fill();
+    } else {
+      ctx.fillStyle = 'rgba(255,220,80,0.35)';
+      ctx.beginPath(); ctx.arc(b.x, b.y, 7, 0, 7); ctx.fill();
+      ctx.fillStyle = '#ffe066';
+      ctx.beginPath(); ctx.arc(b.x, b.y, 3.5, 0, 7); ctx.fill();
+    }
   }
   for (const b of ebullets) {
     if (b.boom) {
@@ -1183,7 +1226,7 @@ function drawPlayer() {
   if (p.invuln > 0 && (frameNo >> 2) % 2 === 0) return;
   ctx.save();
   ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
-  if (p.dir < 0) ctx.scale(-1, 1);
+  ctx.scale(p.dir * 2, 2);
   const run = Math.abs(p.vx) > 0.4 && p.onGround;
   const lp = run ? Math.sin(frameNo * 0.35) * 4 : 0;
   const th = theme();
@@ -1255,6 +1298,24 @@ function drawHUD() {
   ctx.fillText('WPN ' + player.weapon, 150, 18);
   ctx.fillStyle = '#a5b4fc';
   ctx.fillText('LV' + level, 225, 18);
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(280, 10, 100, 14);
+  ctx.fillStyle = player.fuel > 0 ? '#38bdf8' : '#1e293b';
+  ctx.fillRect(280, 10, 100 * (player.fuel / FUEL_MAX), 14);
+  ctx.strokeStyle = '#64748b';
+  ctx.strokeRect(280.5, 10.5, 100, 14);
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = 'bold 10px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('JET', 284, 20);
+  ctx.fillStyle = '#334155';
+  ctx.fillRect(390, 10, 100, 14);
+  ctx.fillStyle = player.rocketCd <= 0 ? '#fb923c' : '#7c2d12';
+  ctx.fillRect(390, 10, 100 * (1 - player.rocketCd / 600), 14);
+  ctx.strokeStyle = '#64748b';
+  ctx.strokeRect(390.5, 10.5, 100, 14);
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillText('RCKT', 394, 20);
   ctx.textAlign = 'right';
   ctx.fillStyle = '#7dd3fc';
   ctx.fillText('SCORE ' + String(score).padStart(6, '0'), W - 14, 18);
@@ -1284,6 +1345,8 @@ function drawTitle() {
     'X or J          fire - combine with directions for 8-way shots',
     'P pause    M mute    R restart',
     'GAMEPAD: stick/d-pad move, A jump, B/X/RT fire, START begin',
+    'C or SHIFT   jetpack: fly 10s, recharges in 5s',
+    'V            rocket: 4x damage, 10s recharge',
     '',
     'Grab orbs, collect the star to upgrade your weapon,',
     'blast the enemies and clear all three sectors through the portals!',
@@ -1344,7 +1407,7 @@ function render() {
   }
 }
 
-const GAMEKEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyZ', 'KeyX', 'KeyJ', 'KeyA', 'KeyD', 'KeyW', 'KeyS', 'Space', 'Enter', 'KeyP', 'KeyR', 'KeyM'];
+const GAMEKEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyZ', 'KeyX', 'KeyJ', 'KeyA', 'KeyD', 'KeyW', 'KeyS', 'Space', 'Enter', 'KeyP', 'KeyR', 'KeyM', 'KeyC', 'KeyV', 'ShiftLeft', 'ShiftRight'];
 
 function init() {
   canvas = document.getElementById('game');
