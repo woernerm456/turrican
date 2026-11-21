@@ -26,9 +26,10 @@ HTML5 canvas + JavaScript. No build step, no dependencies — just open
 - 4 enemy types: ground walkers, flying bats, aimed turrets, and "Dreher"
   wheels — rotating dark-red wheels that chase you and fire radial bursts in all 8 directions
 - plus a big "Dreher" near the end of each level: double HP (8), fires 3x as fast, 1000 pts
-- Two levels: the lava sector, then — through the portal — a flooded water sector
-  (blue water background, light rays, bubbles, sand floor) with attacking fish
-  that swim at you and bite on contact
+- Two levels: level 1 (lava sector) is a quiet training run with no enemies;
+  through the portal you reach level 2, a flooded water sector (blue water
+  background, light rays, bubbles, sand floor) full of attacking fish that
+  swim at you and bite on contact
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
 - Animated fire & lava background everywhere (ember sky, basalt ridges, lava sea), screen shake, particles, floating score text
 - WebAudio chiptune-style sound effects (mutable with M)

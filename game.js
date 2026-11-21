@@ -2,7 +2,7 @@
 (function () {
 const TILE = 32, ROWS = 17, COLS = 160;
 const W = 960, H = 540;
-const GRAV = 0.55, MAXFALL = 13, RUN = 3.2, JUMPV = -13.2;
+const GRAV = 0.55, MAXFALL = 13, RUN = 3.2, JUMPV = -14.85;
 
 let canvas, ctx;
 let map = [];
@@ -103,14 +103,6 @@ function buildLavaLevel() {
   put(136, 13, 'o'); put(137, 13, 'o');
   put(146, 10, 'o'); put(151, 7, 'H');
   put(154, 13, 'o'); put(155, 13, 'o');
-  put(14, 13, 'e'); put(20, 9, 'f');
-  put(36, 13, 'e'); put(40, 13, 't'); put(44, 13, 'e');
-  put(56, 13, 'e'); put(62, 7, 'f');
-  put(80, 13, 'e'); put(84, 13, 't'); put(90, 13, 'e');
-  put(106, 8, 'f');
-  put(118, 13, 'e'); put(124, 9, 'f'); put(128, 13, 'e'); put(134, 13, 'e'); put(137, 13, 't');
-  put(27, 9, 'd'); put(47, 9, 'd'); put(95, 8, 'd'); put(141, 9, 'd');
-  put(148, 9, 'D');
   put(3, 13, 'P');
   put(157, 13, 'G');
   return g;
