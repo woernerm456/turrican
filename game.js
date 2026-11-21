@@ -507,36 +507,72 @@ function frac(v) { return v - Math.floor(v); }
 
 function drawBG() {
   const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#070716');
-  g.addColorStop(0.6, '#141031');
-  g.addColorStop(1, '#241243');
+  g.addColorStop(0, '#2a0700');
+  g.addColorStop(0.45, '#6b1a00');
+  g.addColorStop(0.8, '#a83000');
+  g.addColorStop(1, '#d04800');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
   for (const s of stars) {
-    const sx = ((s.x - cam.x * 0.15) % W + W) % W;
-    ctx.globalAlpha = 0.35 + 0.65 * Math.abs(Math.sin(frameNo * 0.02 + s.p));
+    const ex = ((s.x - cam.x * 0.15 + Math.sin(frameNo * 0.05 + s.p) * 8) % W + W) % W;
+    const ey = ((s.y - frameNo * s.vy) % H + H) % H;
+    ctx.globalAlpha = 0.5 + 0.5 * Math.abs(Math.sin(frameNo * 0.06 + s.p));
     ctx.fillStyle = s.c;
-    ctx.fillRect(sx, s.y, s.r, s.r);
+    ctx.fillRect(ex, ey, s.r, s.r);
   }
   ctx.globalAlpha = 1;
-  ridge(0.35, 200, 150, '#1b1440');
-  ridge(0.6, 260, 110, '#241a52');
+  ridge(0.35, 200, 150, '#200502', '#ff5a00');
+  ridge(0.6, 260, 110, '#330a03', '#ff8a00');
+  drawLava();
 }
-function ridge(par, step, maxH, color) {
+function ridge(par, step, maxH, color, glow) {
   const off = cam.x * par;
   const start = Math.floor(off / step);
-  ctx.fillStyle = color;
   for (let i = start; i < start + W / step + 3; i++) {
     const h = 60 + maxH * frac(Math.sin(i * 12.9898) * 43758.5453);
     const x = i * step - off;
     const peakX = x + step * frac(Math.sin(i * 78.233) * 12543.123);
+    ctx.fillStyle = color;
     ctx.beginPath();
     ctx.moveTo(x - step, H);
     ctx.lineTo(peakX, H - h);
     ctx.lineTo(x + step * 2, H);
     ctx.closePath();
     ctx.fill();
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = glow;
+    ctx.fillRect(peakX - 2, H - h - 2, 4, 4);
+    ctx.globalAlpha = 1;
   }
+}
+function drawLava() {
+  const off = cam.x * 0.1;
+  const baseY = H - 70;
+  const glow = ctx.createLinearGradient(0, baseY - 120, 0, H);
+  glow.addColorStop(0, 'rgba(255,90,0,0)');
+  glow.addColorStop(1, 'rgba(255,110,0,0.4)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, baseY - 120, W, H - baseY + 120);
+  ctx.fillStyle = '#ff6a00';
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (let x = 0; x <= W + 16; x += 16) {
+    const y = baseY + Math.sin((x + off) * 0.02 + frameNo * 0.06) * 6 + Math.sin((x + off) * 0.043 - frameNo * 0.09) * 4;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#ffc233';
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (let x = 0; x <= W + 16; x += 16) {
+    const y = baseY + 10 + Math.sin((x + off) * 0.03 - frameNo * 0.08) * 5;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
 }
 
 function drawTiles() {
@@ -795,7 +831,8 @@ function centerText(txt, y, size, color, glow) {
   ctx.shadowBlur = 0;
 }
 function drawTitle() {
-  overlay(0.72);
+  ctx.fillStyle = 'rgba(30,6,0,0.35)';
+  ctx.fillRect(0, 0, W, H);
   centerText('STARBLASTER', H / 2 - 96, 64, '#22d3ee', true);
   centerText('a Turrican-style run & gun', H / 2 - 46, 18, '#a5b4fc');
   const lines = [
@@ -865,7 +902,8 @@ function init() {
   canvas = document.getElementById('game');
   ctx = canvas.getContext('2d');
   for (let i = 0; i < 130; i++) {
-    stars.push({ x: Math.random() * W, y: Math.random() * H * 0.75, r: Math.random() < 0.8 ? 1 : 2, p: Math.random() * 6.28, c: Math.random() < 0.2 ? '#7dd3fc' : '#e2e8f0' });
+    const cols = ['#ffd23d', '#ff9a1f', '#ff6a00', '#ff3d00'];
+    stars.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() < 0.6 ? 2 : 3, p: Math.random() * 6.28, vy: 0.2 + Math.random() * 0.7, c: cols[(Math.random() * cols.length) | 0] });
   }
   window.addEventListener('keydown', e => {
     if (GAMEKEYS.indexOf(e.code) >= 0) e.preventDefault();

@@ -24,7 +24,7 @@ HTML5 canvas + JavaScript. No build step, no dependencies — just open
   upgraded by collecting the orange star pickup
 - 3 enemy types: ground walkers, flying bats, and aimed turrets
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
-- Parallax starfield + mountain background, screen shake, particles, floating score text
+- Animated fire & lava background everywhere (ember sky, basalt ridges, lava sea), screen shake, particles, floating score text
 - WebAudio chiptune-style sound effects (mutable with M)
 - HUD with hearts, lives, weapon level and score; title, pause, dying, game-over and win screens
 - One hand-designed level (~160 tiles wide) ending in a portal
