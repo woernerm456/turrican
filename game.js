@@ -59,10 +59,10 @@ const sfx = {
   win() { [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => beep(f, 0.14, 'square', 0.09), i * 110)); },
 };
 
-function theme() { return level === 2 ? 'water' : level >= 3 ? 'mars' : 'lava'; }
+function theme() { return level === 2 ? 'water' : level >= 3 ? 'station' : 'lava'; }
 
 function buildLevel(n) {
-  if (n >= 3) return buildMarsLevel();
+  if (n >= 3) return buildStationLevel();
   if (n === 2) return buildWaterLevel();
   return buildLavaLevel();
 }
@@ -161,7 +161,7 @@ function buildWaterLevel() {
   return g;
 }
 
-function buildMarsLevel() {
+function buildStationLevel() {
   const g = Array.from({ length: ROWS }, () => Array(COLS).fill(' '));
   const fill = (x, y, w, h, c) => {
     for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) {
@@ -745,7 +745,7 @@ function frac(v) { return v - Math.floor(v); }
 
 function makeSky(theme) {
   const arr = [];
-  const cols = theme === 'water' ? ['#bfefff', '#67e8f9', '#e0f2fe', '#38bdf8'] : theme === 'mars' ? ['#f5c08a', '#e7a06a', '#d97742', '#c2410c'] : ['#ffd23d', '#ff9a1f', '#ff6a00', '#ff3d00'];
+  const cols = theme === 'water' ? ['#bfefff', '#67e8f9', '#e0f2fe', '#38bdf8'] : theme === 'station' ? ['#e2e8f0', '#7dd3fc', '#ffffff', '#93c5fd'] : ['#ffd23d', '#ff9a1f', '#ff6a00', '#ff3d00'];
   for (let i = 0; i < 130; i++) {
     arr.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() < 0.6 ? 2 : 3, p: Math.random() * 6.28, vy: 0.2 + Math.random() * 0.7, c: cols[(Math.random() * cols.length) | 0] });
   }
@@ -759,11 +759,9 @@ function drawBG() {
     g.addColorStop(0, '#010d18');
     g.addColorStop(0.55, '#013a5c');
     g.addColorStop(1, '#0a6ea8');
-  } else if (th === 'mars') {
-    g.addColorStop(0, '#3a1408');
-    g.addColorStop(0.5, '#7a3416');
-    g.addColorStop(0.85, '#b85c2a');
-    g.addColorStop(1, '#d97b42');
+  } else if (th === 'station') {
+    g.addColorStop(0, '#050510');
+    g.addColorStop(1, '#0d0d24');
   } else {
     g.addColorStop(0, '#2a0700');
     g.addColorStop(0.45, '#6b1a00');
@@ -773,75 +771,84 @@ function drawBG() {
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
   if (th === 'water') drawRays();
-  if (th === 'mars') drawMoons();
-  for (const s of stars) {
-    const ex = ((s.x - cam.x * 0.15 + Math.sin(frameNo * 0.05 + s.p) * 8) % W + W) % W;
-    const ey = ((s.y - frameNo * s.vy) % H + H) % H;
-    ctx.globalAlpha = 0.5 + 0.5 * Math.abs(Math.sin(frameNo * 0.06 + s.p));
-    ctx.fillStyle = s.c;
-    ctx.fillRect(ex, ey, s.r, s.r);
+  if (th === 'station') {
+    drawStation();
+  } else {
+    for (const s of stars) {
+      const ex = ((s.x - cam.x * 0.15 + Math.sin(frameNo * 0.05 + s.p) * 8) % W + W) % W;
+      const ey = ((s.y - frameNo * s.vy) % H + H) % H;
+      ctx.globalAlpha = 0.5 + 0.5 * Math.abs(Math.sin(frameNo * 0.06 + s.p));
+      ctx.fillStyle = s.c;
+      ctx.fillRect(ex, ey, s.r, s.r);
+    }
+    ctx.globalAlpha = 1;
   }
-  ctx.globalAlpha = 1;
   if (th === 'water') {
     ridge(0.35, 200, 150, '#04263b', '#22d3ee');
     ridge(0.6, 260, 110, '#062f4d', '#67e8f9');
     drawSand();
-  } else if (th === 'mars') {
-    ridge(0.35, 200, 150, '#3d0f0a', '#fb923c');
-    ridge(0.6, 260, 110, '#521709', '#fdba74');
-    drawMarsGround();
-  } else {
+  } else if (th !== 'station') {
     ridge(0.35, 200, 150, '#200502', '#ff5a00');
     ridge(0.6, 260, 110, '#330a03', '#ff8a00');
     drawLava();
   }
 }
-function drawMoons() {
-  const span = W + 300;
-  const x1 = ((W * 0.72 - cam.x * 0.05) % span + span) % span - 150;
-  const x2 = ((W * 0.22 - cam.x * 0.09) % span + span) % span - 150;
-  ctx.fillStyle = '#e8d5c0';
-  ctx.beginPath(); ctx.arc(x1, 80, 24, 0, 7); ctx.fill();
-  ctx.fillStyle = '#cbb49e';
-  ctx.beginPath(); ctx.arc(x1 - 7, 74, 6, 0, 7); ctx.fill();
-  ctx.beginPath(); ctx.arc(x1 + 8, 88, 4, 0, 7); ctx.fill();
-  ctx.fillStyle = '#d9c6b2';
-  ctx.beginPath(); ctx.arc(x2, 150, 13, 0, 7); ctx.fill();
-  ctx.fillStyle = '#b8a48f';
-  ctx.beginPath(); ctx.arc(x2 + 3, 146, 3.5, 0, 7); ctx.fill();
-}
-function drawMarsGround() {
-  const off = cam.x * 0.1;
+function drawStation() {
+  ctx.fillStyle = '#0a0a18';
+  ctx.fillRect(0, 0, W, H);
+  const winW = 240, winH = 170, winY = 70;
+  for (let i = 0; i < 4; i++) {
+    const wx = ((i * 320 - cam.x * 0.25) % (W + 320) + W + 320) % (W + 320) - 160;
+    ctx.fillStyle = '#020210';
+    ctx.fillRect(wx, winY, winW, winH);
+    for (let s = 0; s < 14; s++) {
+      const sx = wx + (((s * 53.7 - cam.x * 0.4) % winW) + winW) % winW;
+      const sy = winY + (((s * 31.3) % winH) + winH) % winH;
+      ctx.fillStyle = s % 4 === 0 ? '#7dd3fc' : '#e2e8f0';
+      ctx.globalAlpha = 0.5 + 0.5 * Math.abs(Math.sin(frameNo * 0.03 + s));
+      ctx.fillRect(sx, sy, 2, 2);
+    }
+    ctx.globalAlpha = 1;
+    if (i === 1) {
+      ctx.fillStyle = '#1d4ed8';
+      ctx.beginPath(); ctx.arc(wx + winW - 50, winY + winH - 40, 34, 0, 7); ctx.fill();
+      ctx.fillStyle = '#3b82f6';
+      ctx.beginPath(); ctx.arc(wx + winW - 58, winY + winH - 48, 30, 0, 7); ctx.fill();
+    }
+    ctx.strokeStyle = '#3f3f5a';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(wx, winY, winW, winH);
+    ctx.strokeStyle = '#55557a';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(wx + 6, winY + 6, winW - 12, winH - 12);
+    ctx.strokeStyle = '#3f3f5a';
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(wx + winW / 2, winY); ctx.lineTo(wx + winW / 2, winY + winH); ctx.stroke();
+    ctx.fillStyle = '#6b6b8f';
+    for (let r = 0; r < 4; r++) {
+      ctx.fillRect(wx + 10 + r * (winW - 20) / 3, winY - 4, 4, 4);
+      ctx.fillRect(wx + 10 + r * (winW - 20) / 3, winY + winH, 4, 4);
+    }
+  }
+  ctx.strokeStyle = 'rgba(80,80,120,0.35)';
+  ctx.lineWidth = 2;
+  for (let x = -cam.x * 0.5 % 160; x < W; x += 160) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H - 70); ctx.stroke();
+  }
+  for (let i = 0; i < 3; i++) {
+    const lx = ((i * 400 - cam.x * 0.5) % (W + 100) + W + 100) % (W + 100) - 50;
+    ctx.fillStyle = (frameNo >> 4) % 2 === 0 ? '#ff3b5c' : '#7f1d1d';
+    ctx.beginPath(); ctx.arc(lx, 30, 4, 0, 7); ctx.fill();
+  }
   const baseY = H - 70;
-  const glow = ctx.createLinearGradient(0, baseY - 120, 0, H);
-  glow.addColorStop(0, 'rgba(251,146,60,0)');
-  glow.addColorStop(1, 'rgba(251,146,60,0.3)');
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, baseY - 120, W, H - baseY + 120);
-  ctx.fillStyle = '#7c2d12';
-  ctx.beginPath();
-  ctx.moveTo(0, H);
-  for (let x = 0; x <= W + 16; x += 16) {
-    ctx.lineTo(x, baseY + Math.sin((x + off) * 0.02 + frameNo * 0.04) * 6);
-  }
-  ctx.lineTo(W, H);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = '#b45309';
-  ctx.beginPath();
-  ctx.moveTo(0, H);
-  for (let x = 0; x <= W + 16; x += 16) {
-    ctx.lineTo(x, baseY + 8 + Math.sin((x + off) * 0.03 - frameNo * 0.05) * 4);
-  }
-  ctx.lineTo(W, H);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = '#5c1f0d';
-  for (let i = 0; i < 6; i++) {
-    const cx = ((i * 330 - off) % (W + 200) + W + 200) % (W + 200) - 100;
-    ctx.beginPath();
-    ctx.ellipse(cx, baseY + 20 + (i % 3) * 9, 20, 5, 0, 0, 7);
-    ctx.fill();
+  ctx.fillStyle = '#23233a';
+  ctx.fillRect(0, baseY, W, H - baseY);
+  ctx.fillStyle = '#2e2e4a';
+  ctx.fillRect(0, baseY, W, 8);
+  ctx.strokeStyle = '#1a1a2e';
+  ctx.lineWidth = 2;
+  for (let x = -cam.x % 64; x < W; x += 64) {
+    ctx.beginPath(); ctx.moveTo(x, baseY); ctx.lineTo(x, H); ctx.stroke();
   }
 }
 function drawRays() {
@@ -1179,20 +1186,26 @@ function drawPlayer() {
   if (p.dir < 0) ctx.scale(-1, 1);
   const run = Math.abs(p.vx) > 0.4 && p.onGround;
   const lp = run ? Math.sin(frameNo * 0.35) * 4 : 0;
-  const water = theme() === 'water';
-  ctx.fillStyle = water ? '#14532d' : '#3a3a5e';
+  const th = theme();
+  const water = th === 'water';
+  const suit = th === 'station';
+  ctx.fillStyle = suit ? '#9ca3af' : water ? '#14532d' : '#3a3a5e';
   ctx.fillRect(-7 + lp, 8, 6, 6);
   ctx.fillRect(1 - lp, 8, 6, 6);
-  ctx.fillStyle = water ? '#16a34a' : '#e8641c';
+  if (suit) {
+    ctx.fillStyle = '#9ca3af';
+    ctx.fillRect(-14, -6, 6, 12);
+  }
+  ctx.fillStyle = suit ? '#e5e7eb' : water ? '#16a34a' : '#e8641c';
   ctx.fillRect(-8, -4, 16, 13);
-  ctx.fillStyle = water ? '#15803d' : '#c24e12';
+  ctx.fillStyle = suit ? '#6b7280' : water ? '#15803d' : '#c24e12';
   ctx.fillRect(-8, 4, 16, 5);
-  ctx.fillStyle = water ? '#4ade80' : '#f2a03d';
+  ctx.fillStyle = suit ? '#d1d5db' : water ? '#4ade80' : '#f2a03d';
   ctx.fillRect(-11, -5, 5, 7);
   ctx.fillRect(6, -5, 5, 7);
-  ctx.fillStyle = '#e8e8f2';
+  ctx.fillStyle = suit ? '#f3f4f6' : '#e8e8f2';
   ctx.fillRect(-7, -14, 14, 10);
-  ctx.fillStyle = water ? '#3b82f6' : '#22d3ee';
+  ctx.fillStyle = suit ? '#38bdf8' : water ? '#3b82f6' : '#22d3ee';
   ctx.fillRect(0, -11, 7, 4);
   const ax = p.aim.x, ay = p.aim.y;
   ctx.strokeStyle = '#9aa0b4';
@@ -1317,7 +1330,7 @@ function render() {
   } else if (state === 'levelclear') {
     overlay(0.6);
     centerText('LEVEL ' + level + ' CLEAR!', H / 2 - 30, 48, '#22d3ee', true);
-    centerText(level === 1 ? 'next: the flooded sector...' : 'next: the red planet MARS...', H / 2 + 24, 18, '#a5b4fc');
+    centerText(level === 1 ? 'next: the flooded sector...' : 'next: the space station...', H / 2 + 24, 18, '#a5b4fc');
   } else if (state === 'gameover') {
     overlay(0.75);
     centerText('GAME OVER', H / 2 - 40, 56, '#ff3b5c', true);
