@@ -103,6 +103,7 @@ function buildLevel() {
   put(80, 13, 'e'); put(84, 13, 't'); put(90, 13, 'e');
   put(106, 8, 'f');
   put(118, 13, 'e'); put(124, 9, 'f'); put(128, 13, 'e'); put(134, 13, 'e'); put(137, 13, 't');
+  put(27, 9, 'd'); put(47, 9, 'd'); put(95, 8, 'd'); put(141, 9, 'd');
   put(3, 13, 'P');
   put(157, 13, 'G');
   return g;
@@ -121,6 +122,9 @@ function spawnFromMap() {
       map[y][x] = ' ';
     } else if (c === 't') {
       enemies.push({ type: 'turret', x: x * TILE + 2, y: y * TILE + 6, w: 28, h: 26, vx: 0, vy: 0, hp: 3, flash: 0, fire: 60 + Math.floor(Math.random() * 60), onGround: false });
+      map[y][x] = ' ';
+    } else if (c === 'd') {
+      enemies.push({ type: 'dreher', x: x * TILE + 1, y: y * TILE + 1, w: 30, h: 30, dir: 1, hp: 4, flash: 0, t: 0, rot: 0, fire: 90 + Math.floor(Math.random() * 60) });
       map[y][x] = ' ';
     } else if (c === 'o' || c === 'O' || c === 'H' || c === 'W') {
       pickups.push({ x: x * TILE + TILE / 2, y: y * TILE + TILE / 2, type: c, t: Math.random() * 6 });
@@ -321,7 +325,7 @@ function checkEnemyContact(p) {
 
 function killEnemy(e) {
   e.dead = true;
-  const pts = e.type === 'turret' ? 300 : e.type === 'flyer' ? 150 : 100;
+  const pts = e.type === 'turret' ? 300 : e.type === 'flyer' ? 150 : e.type === 'dreher' ? 400 : 100;
   score += pts;
   burst(e.x + e.w / 2, e.y + e.h / 2, 18, e.type === 'flyer' ? '#f87171' : '#dc2626');
   addText('+' + pts, e.x + e.w / 2, e.y, '#7dd3fc');
@@ -352,6 +356,27 @@ function updateEnemies() {
       if (solid(Math.floor(wx / TILE), Math.floor((e.y + e.h / 2) / TILE))) e.dir *= -1;
       e.x = Math.max(TILE, Math.min(COLS * TILE - TILE - e.w, e.x));
       e.y = Math.max(TILE, e.baseY + Math.sin(e.t * 0.05) * 26);
+    } else if (e.type === 'dreher') {
+      e.rot += 0.09;
+      e.t++;
+      const dx = player.x + player.w / 2 - (e.x + e.w / 2);
+      const dy = player.y + player.h / 2 - (e.y + e.h / 2);
+      const d = Math.hypot(dx, dy);
+      if (d < 420 && d > 40 && state === 'play') {
+        e.x += dx / d * 0.8;
+        e.y += dy / d * 0.8;
+      }
+      e.x = Math.max(TILE, Math.min(COLS * TILE - TILE - e.w, e.x));
+      e.y = Math.max(TILE, Math.min(ROWS * TILE - e.h - TILE, e.y));
+      e.fire--;
+      if (e.fire <= 0 && d < 480 && state === 'play') {
+        e.fire = 150;
+        for (let i = 0; i < 8; i++) {
+          const a = e.rot + i / 8 * Math.PI * 2;
+          if (ebullets.length < 40) ebullets.push({ x: e.x + e.w / 2, y: e.y + e.h / 2, vx: Math.cos(a) * 3.2, vy: Math.sin(a) * 3.2 });
+        }
+        sfx.eshoot();
+      }
     } else if (e.type === 'turret') {
       e.vy = Math.min(MAXFALL, e.vy + GRAV);
       e.vx = 0;
@@ -748,6 +773,22 @@ function drawEnemies() {
       ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#fbbf24';
       ctx.beginPath(); ctx.arc(0, -1, 3, 0, 7); ctx.fill();
+    } else if (e.type === 'dreher') {
+      ctx.rotate(e.rot);
+      ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#7f1d1d';
+      ctx.beginPath(); ctx.arc(0, 0, 13, 0, 7); ctx.fill();
+      ctx.strokeStyle = e.flash > 0 ? '#ffffff' : '#b91c1c';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, 13, 0, 7); ctx.stroke();
+      for (let i = 0; i < 6; i++) {
+        const a = i / 6 * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(a) * 12, Math.sin(a) * 12);
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath(); ctx.arc(0, 0, 4, 0, 7); ctx.fill();
     } else if (e.type === 'turret') {
       ctx.fillStyle = '#450a0a';
       ctx.fillRect(-13, 4, 26, 9);

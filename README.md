@@ -23,7 +23,8 @@ HTML5 canvas + JavaScript. No build step, no dependencies — just open
 - Fixed-timestep physics: run, variable-height jump, coyote time, jump buffering
 - 8-directional shooting with 3 weapon levels (single → twin → triple spread),
   upgraded by collecting the orange star pickup
-- 3 enemy types: ground walkers, flying bats, and aimed turrets
+- 4 enemy types: ground walkers, flying bats, aimed turrets, and "Dreher"
+  wheels — rotating dark-red wheels that chase you and fire radial bursts in all 8 directions
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
 - Animated fire & lava background everywhere (ember sky, basalt ridges, lava sea), screen shake, particles, floating score text
 - WebAudio chiptune-style sound effects (mutable with M)
