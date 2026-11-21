@@ -25,6 +25,7 @@ HTML5 canvas + JavaScript. No build step, no dependencies — just open
   upgraded by collecting the orange star pickup
 - 4 enemy types: ground walkers, flying bats, aimed turrets, and "Dreher"
   wheels — rotating dark-red wheels that chase you and fire radial bursts in all 8 directions
+- plus a big "Dreher" near the end of the level: double HP (8), fires 3x as fast, 1000 pts
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
 - Animated fire & lava background everywhere (ember sky, basalt ridges, lava sea), screen shake, particles, floating score text
 - WebAudio chiptune-style sound effects (mutable with M)
