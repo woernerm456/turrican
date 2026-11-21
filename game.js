@@ -150,6 +150,7 @@ function buildWaterLevel() {
   put(14, 12, 's'); put(20, 9, 's'); put(36, 12, 's'); put(48, 9, 's');
   put(66, 12, 's'); put(80, 9, 's'); put(100, 12, 's'); put(112, 9, 's');
   put(124, 12, 's'); put(134, 10, 's');
+  put(138, 8, 'F');
   put(3, 13, 'P');
   put(157, 13, 'G');
   return g;
@@ -170,7 +171,10 @@ function spawnFromMap() {
       enemies.push({ type: 'turret', x: x * TILE + 2, y: y * TILE + 6, w: 28, h: 26, vx: 0, vy: 0, hp: 3, flash: 0, fire: 60 + Math.floor(Math.random() * 60), onGround: false });
       map[y][x] = ' ';
     } else if (c === 's') {
-      enemies.push({ type: 'fish', x: x * TILE + 3, y: y * TILE, baseY: y * TILE, w: 26, h: 16, dir: Math.random() < 0.5 ? -1 : 1, hp: 2, flash: 0, t: Math.floor(Math.random() * 40) });
+      enemies.push({ type: 'fish', big: false, x: x * TILE + 3, y: y * TILE, baseY: y * TILE, w: 26, h: 16, dir: Math.random() < 0.5 ? -1 : 1, hp: 2, flash: 0, t: Math.floor(Math.random() * 40) });
+      map[y][x] = ' ';
+    } else if (c === 'F') {
+      enemies.push({ type: 'fish', big: true, x: x * TILE - 16, y: y * TILE - 8, baseY: y * TILE, w: 64, h: 36, dir: -1, hp: 8, flash: 0, t: 0, fire: 60 });
       map[y][x] = ' ';
     } else if (c === 'd') {
       enemies.push({ type: 'dreher', big: false, x: x * TILE + 1, y: y * TILE + 1, w: 30, h: 30, dir: 1, hp: 4, flash: 0, t: 0, rot: 0, fire: 90 + Math.floor(Math.random() * 60) });
@@ -377,9 +381,9 @@ function checkEnemyContact(p) {
 
 function killEnemy(e) {
   e.dead = true;
-  const pts = e.type === 'turret' ? 300 : e.type === 'flyer' ? 150 : e.type === 'dreher' ? (e.big ? 1000 : 400) : e.type === 'fish' ? 200 : 100;
+  const pts = e.type === 'turret' ? 300 : e.type === 'flyer' ? 150 : e.type === 'dreher' ? (e.big ? 1000 : 400) : e.type === 'fish' ? (e.big ? 1200 : 200) : 100;
   score += pts;
-  burst(e.x + e.w / 2, e.y + e.h / 2, 18, e.type === 'flyer' || e.type === 'fish' ? '#f87171' : '#dc2626');
+  burst(e.x + e.w / 2, e.y + e.h / 2, e.big ? 30 : 18, e.type === 'fish' ? '#4ade80' : e.type === 'flyer' ? '#f87171' : '#dc2626');
   addText('+' + pts, e.x + e.w / 2, e.y, '#7dd3fc');
   sfx.boom();
   shake = Math.max(shake, 6);
@@ -413,18 +417,29 @@ function updateEnemies() {
       const dx = player.x + player.w / 2 - (e.x + e.w / 2);
       const dy = player.y + player.h / 2 - (e.y + e.h / 2);
       const d = Math.hypot(dx, dy);
+      const chase = e.big ? 0.55 : 1.5;
+      const patrol = e.big ? 0.3 : 0.7;
       if (d < 520 && Math.abs(dy) < 220 && state === 'play') {
         e.dir = dx < 0 ? -1 : 1;
-        e.x += e.dir * 1.5;
-        e.y += (dy / (Math.abs(dy) + 60)) * 1.4;
+        e.x += e.dir * chase;
+        e.y += (dy / (Math.abs(dy) + 60)) * (e.big ? 0.6 : 1.4);
       } else {
-        e.x += e.dir * 0.7;
-        e.y = Math.max(TILE, e.baseY + Math.sin(e.t * 0.07) * 22);
+        e.x += e.dir * patrol;
+        e.y = Math.max(TILE, e.baseY + Math.sin(e.t * 0.07) * (e.big ? 14 : 22));
       }
       const wx = e.dir > 0 ? e.x + e.w + 2 : e.x - 2;
       if (solid(Math.floor(wx / TILE), Math.floor((e.y + e.h / 2) / TILE))) e.dir *= -1;
       e.x = Math.max(TILE, Math.min(COLS * TILE - TILE - e.w, e.x));
       e.y = Math.max(TILE, Math.min(13 * TILE, e.y));
+      if (e.big) {
+        e.fire--;
+        if (e.fire <= 0 && d < 560 && state === 'play') {
+          e.fire = 60;
+          const a = Math.atan2(dy, dx);
+          if (ebullets.length < 40) ebullets.push({ x: e.x + e.w / 2 + Math.cos(a) * 30, y: e.y + e.h / 2 + Math.sin(a) * 18, vx: Math.cos(a) * 4.5, vy: Math.sin(a) * 4.5 });
+          sfx.eshoot();
+        }
+      }
     } else if (e.type === 'dreher') {
       e.rot += 0.09;
       e.t++;
@@ -922,18 +937,19 @@ function drawEnemies() {
       ctx.fillStyle = '#fbbf24';
       ctx.beginPath(); ctx.arc(0, -1, 3, 0, 7); ctx.fill();
     } else if (e.type === 'fish') {
+      const RX = e.big ? 32 : 13, RY = e.big ? 18 : 8;
       if (e.dir < 0) ctx.scale(-1, 1);
-      ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#7f1d1d';
-      ctx.beginPath(); ctx.ellipse(0, 0, 13, 8, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#b91c1c';
+      ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#166534';
+      ctx.beginPath(); ctx.ellipse(0, 0, RX, RY, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#22c55e';
       ctx.beginPath();
-      ctx.moveTo(-11, 0); ctx.lineTo(-19, -7); ctx.lineTo(-19, 7);
+      ctx.moveTo(-RX + 2, 0); ctx.lineTo(-RX - (e.big ? 14 : 8), -RY - 1); ctx.lineTo(-RX - (e.big ? 14 : 8), RY + 1);
       ctx.closePath(); ctx.fill();
       ctx.beginPath();
-      ctx.moveTo(-2, -7); ctx.lineTo(3, -12); ctx.lineTo(6, -7);
+      ctx.moveTo(-RX * 0.15, -RY); ctx.lineTo(RX * 0.25, -RY - (e.big ? 10 : 5)); ctx.lineTo(RX * 0.45, -RY);
       ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#fbbf24';
-      ctx.beginPath(); ctx.arc(7, -2, 2.5, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(RX * 0.55, -RY * 0.25, e.big ? 4 : 2.5, 0, 7); ctx.fill();
     } else if (e.type === 'dreher') {
       const R = e.big ? 24 : 13;
       const spokes = e.big ? 8 : 6;
@@ -992,19 +1008,20 @@ function drawPlayer() {
   if (p.dir < 0) ctx.scale(-1, 1);
   const run = Math.abs(p.vx) > 0.4 && p.onGround;
   const lp = run ? Math.sin(frameNo * 0.35) * 4 : 0;
-  ctx.fillStyle = '#3a3a5e';
+  const water = level >= 2;
+  ctx.fillStyle = water ? '#14532d' : '#3a3a5e';
   ctx.fillRect(-7 + lp, 8, 6, 6);
   ctx.fillRect(1 - lp, 8, 6, 6);
-  ctx.fillStyle = '#e8641c';
+  ctx.fillStyle = water ? '#16a34a' : '#e8641c';
   ctx.fillRect(-8, -4, 16, 13);
-  ctx.fillStyle = '#c24e12';
+  ctx.fillStyle = water ? '#15803d' : '#c24e12';
   ctx.fillRect(-8, 4, 16, 5);
-  ctx.fillStyle = '#f2a03d';
+  ctx.fillStyle = water ? '#4ade80' : '#f2a03d';
   ctx.fillRect(-11, -5, 5, 7);
   ctx.fillRect(6, -5, 5, 7);
   ctx.fillStyle = '#e8e8f2';
   ctx.fillRect(-7, -14, 14, 10);
-  ctx.fillStyle = '#22d3ee';
+  ctx.fillStyle = water ? '#3b82f6' : '#22d3ee';
   ctx.fillRect(0, -11, 7, 4);
   const ax = p.aim.x, ay = p.aim.y;
   ctx.strokeStyle = '#9aa0b4';
