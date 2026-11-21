@@ -28,10 +28,10 @@ HTML5 canvas + JavaScript. No build step, no dependencies — just open
 - plus a big "Dreher" near the end of each level: double HP (8), fires 3x as fast, 1000 pts
 - Two levels: the lava sector, then — through the portal — a flooded water sector
   (blue water background, light rays, bubbles, sand floor). In level 2 the player
-  is recolored green/blue. Level 2 contains only green fish — attacking fish that
-  swim at you and bite on contact, plus a "Riesen-Fisch" (giant fish, 8 HP) near the
-  end that fires an aimed shot every second; all enemy types shared with level 1
-  were removed there
+  is recolored green/blue. Level 2 enemies: green fish that swim at you and bite on
+  contact, a "Riesen-Fisch" (giant fish, 8 HP) near the end that fires an aimed shot
+  every second, blue cannons that fire two shots per volley, and 5 ground robots
+  that throw a boomerang disc at you which flies to you and returns to the robot
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
 - Animated fire & lava background everywhere (ember sky, basalt ridges, lava sea), screen shake, particles, floating score text
 - WebAudio chiptune-style sound effects (mutable with M)

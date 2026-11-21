@@ -34,7 +34,7 @@ function snapshot(label) {
       let ch = safeSolid(x, y) ? '#' : ' ';
       for (const e of G.enemies) {
         if (!e.dead && Math.floor((e.x + e.w / 2) / TILE) === x && Math.floor((e.y + e.h / 2) / TILE) === y) {
-          ch = e.type === 'walker' ? 'w' : e.type === 'flyer' ? 'f' : e.type === 'turret' ? 't' : (e.big ? 'D' : 'd');
+          ch = e.type === 'walker' ? 'w' : e.type === 'flyer' ? 'f' : e.type === 'turret' ? 't' : e.type === 'fish' ? (e.big ? 'F' : 's') : e.type === 'robot' ? 'r' : (e.big ? 'D' : 'd');
         }
       }
       if (p && Math.floor((p.x + p.w / 2) / TILE) === x && Math.floor((p.y + p.h / 2) / TILE) === y) ch = '@';

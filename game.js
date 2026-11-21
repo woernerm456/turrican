@@ -151,6 +151,8 @@ function buildWaterLevel() {
   put(66, 12, 's'); put(80, 9, 's'); put(100, 12, 's'); put(112, 9, 's');
   put(124, 12, 's'); put(134, 10, 's');
   put(138, 8, 'F');
+  put(60, 13, 't'); put(108, 13, 't');
+  put(18, 13, 'r'); put(44, 13, 'r'); put(72, 13, 'r'); put(96, 13, 'r'); put(116, 13, 'r');
   put(3, 13, 'P');
   put(157, 13, 'G');
   return g;
@@ -168,7 +170,10 @@ function spawnFromMap() {
       enemies.push({ type: 'flyer', x: x * TILE + 4, y: y * TILE, baseY: y * TILE, w: 22, h: 18, dir: 1, hp: 1, flash: 0, t: 0 });
       map[y][x] = ' ';
     } else if (c === 't') {
-      enemies.push({ type: 'turret', x: x * TILE + 2, y: y * TILE + 6, w: 28, h: 26, vx: 0, vy: 0, hp: 3, flash: 0, fire: 60 + Math.floor(Math.random() * 60), onGround: false });
+      enemies.push({ type: 'turret', blue: level >= 2, double: level >= 2, x: x * TILE + 2, y: y * TILE + 6, w: 28, h: 26, vx: 0, vy: 0, hp: 3, flash: 0, fire: 60 + Math.floor(Math.random() * 60), onGround: false });
+      map[y][x] = ' ';
+    } else if (c === 'r') {
+      enemies.push({ type: 'robot', x: x * TILE + 3, y: y * TILE + 6, w: 26, h: 26, vx: 0, vy: 0, dir: Math.random() < 0.5 ? -1 : 1, hp: 3, flash: 0, onGround: false, atkCd: 90 + Math.floor(Math.random() * 60) });
       map[y][x] = ' ';
     } else if (c === 's') {
       enemies.push({ type: 'fish', big: false, x: x * TILE + 3, y: y * TILE, baseY: y * TILE, w: 26, h: 16, dir: Math.random() < 0.5 ? -1 : 1, hp: 2, flash: 0, t: Math.floor(Math.random() * 40) });
@@ -381,9 +386,9 @@ function checkEnemyContact(p) {
 
 function killEnemy(e) {
   e.dead = true;
-  const pts = e.type === 'turret' ? 300 : e.type === 'flyer' ? 150 : e.type === 'dreher' ? (e.big ? 1000 : 400) : e.type === 'fish' ? (e.big ? 1200 : 200) : 100;
+  const pts = e.type === 'turret' ? 300 : e.type === 'flyer' ? 150 : e.type === 'dreher' ? (e.big ? 1000 : 400) : e.type === 'fish' ? (e.big ? 1200 : 200) : e.type === 'robot' ? 250 : 100;
   score += pts;
-  burst(e.x + e.w / 2, e.y + e.h / 2, e.big ? 30 : 18, e.type === 'fish' ? '#4ade80' : e.type === 'flyer' ? '#f87171' : '#dc2626');
+  burst(e.x + e.w / 2, e.y + e.h / 2, e.big ? 30 : 18, e.type === 'fish' ? '#4ade80' : e.type === 'flyer' ? '#f87171' : e.type === 'robot' ? '#94a3b8' : '#dc2626');
   addText('+' + pts, e.x + e.w / 2, e.y, '#7dd3fc');
   sfx.boom();
   shake = Math.max(shake, 6);
@@ -472,9 +477,31 @@ function updateEnemies() {
       const dy = player.y + player.h / 2 - (e.y + e.h / 2);
       const d = Math.hypot(dx, dy);
       if (e.fire <= 0 && d < 430 && state === 'play') {
-        e.fire = 130;
+        e.fire = e.double ? 150 : 130;
         const a = Math.atan2(dy, dx);
-        ebullets.push({ x: e.x + e.w / 2, y: e.y + e.h / 2 - 4, vx: Math.cos(a) * 4.6, vy: Math.sin(a) * 4.6 });
+        const offs = e.double ? [-0.15, 0.15] : [0];
+        for (const off of offs) {
+          if (ebullets.length < 40) ebullets.push({ x: e.x + e.w / 2, y: e.y + e.h / 2 - 4, vx: Math.cos(a + off) * 4.6, vy: Math.sin(a + off) * 4.6 });
+        }
+        sfx.eshoot();
+      }
+    } else if (e.type === 'robot') {
+      e.vy = Math.min(MAXFALL, e.vy + GRAV);
+      e.vx = e.dir * 1.0;
+      const hitWall = moveAndCollide(e);
+      if (hitWall) e.dir *= -1;
+      if (e.onGround) {
+        const aheadX = e.dir > 0 ? e.x + e.w + 3 : e.x - 3;
+        if (!solid(Math.floor(aheadX / TILE), Math.floor((e.y + e.h + 4) / TILE))) e.dir *= -1;
+      }
+      e.atkCd--;
+      const dx = player.x + player.w / 2 - (e.x + e.w / 2);
+      const dy = player.y + player.h / 2 - (e.y + e.h / 2);
+      const d = Math.hypot(dx, dy);
+      if (e.atkCd <= 0 && d < 380 && Math.abs(dy) < 140 && state === 'play') {
+        e.atkCd = 140;
+        const a = Math.atan2(dy, dx);
+        if (ebullets.length < 40) ebullets.push({ x: e.x + e.w / 2, y: e.y + 8, vx: Math.cos(a) * 5, vy: Math.sin(a) * 5, boom: true, owner: e, t: 0 });
         sfx.eshoot();
       }
     }
@@ -505,15 +532,25 @@ function updateBullets() {
   }
   bullets = bullets.filter(b => !b.dead && b.x > cam.x - 40 && b.x < cam.x + W + 40 && b.y > -20 && b.y < ROWS * TILE + 20);
   for (const b of ebullets) {
+    if (b.boom) {
+      b.t++;
+      if (b.t > 35 && b.owner && !b.owner.dead) {
+        const ox = b.owner.x + b.owner.w / 2, oy = b.owner.y + b.owner.h / 2;
+        const a = Math.atan2(oy - b.y, ox - b.x);
+        b.vx = Math.cos(a) * 4.5;
+        b.vy = Math.sin(a) * 4.5;
+        if (Math.hypot(ox - b.x, oy - b.y) < 16) b.dead = true;
+      } else if (b.t > 170) b.dead = true;
+    }
     b.x += b.vx;
     b.y += b.vy;
     if (solid(Math.floor(b.x / TILE), Math.floor(b.y / TILE))) {
       b.dead = true;
-      burst(b.x, b.y, 4, '#ff4d5e');
+      burst(b.x, b.y, 4, b.boom ? '#93c5fd' : '#ff4d5e');
     }
     const p = player;
     if (state === 'play' && p && b.x > p.x - 2 && b.x < p.x + p.w + 2 && b.y > p.y - 2 && b.y < p.y + p.h + 2) {
-      b.dead = true;
+      if (!b.boom) b.dead = true;
       hurt(1, b.vx * 0.8, -6);
     }
   }
@@ -968,16 +1005,36 @@ function drawEnemies() {
       }
       ctx.fillStyle = '#fbbf24';
       ctx.beginPath(); ctx.arc(0, 0, e.big ? 7 : 4, 0, 7); ctx.fill();
+    } else if (e.type === 'robot') {
+      if (e.dir < 0) ctx.scale(-1, 1);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(-10, 8, 8, 6);
+      ctx.fillRect(2, 8, 8, 6);
+      ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#334155';
+      ctx.fillRect(-12, -8, 24, 17);
+      ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#475569';
+      ctx.fillRect(-8, -4, 16, 9);
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(0, -14); ctx.stroke();
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath(); ctx.arc(0, -14, 2.5, 0, 7); ctx.fill();
+      ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#22d3ee';
+      ctx.fillRect(4, -2, 5, 4);
     } else if (e.type === 'turret') {
-      ctx.fillStyle = '#450a0a';
+      const base = e.blue ? '#1e3a8a' : '#450a0a';
+      const dome = e.blue ? '#1d4ed8' : '#7f1d1d';
+      const barrel = e.blue ? '#3b82f6' : '#b91c1c';
+      const tip = e.blue ? '#93c5fd' : '#fbbf24';
+      ctx.fillStyle = base;
       ctx.fillRect(-13, 4, 26, 9);
-      ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#7f1d1d';
+      ctx.fillStyle = e.flash > 0 ? '#ffffff' : dome;
       ctx.fillRect(-9, -6, 18, 12);
       const a = Math.atan2((player.y + player.h / 2) - (e.y + e.h / 2), (player.x + player.w / 2) - (e.x + e.w / 2));
       ctx.rotate(a);
-      ctx.fillStyle = '#b91c1c';
+      ctx.fillStyle = barrel;
       ctx.fillRect(0, -3, 16, 6);
-      ctx.fillStyle = '#fbbf24';
+      ctx.fillStyle = tip;
       ctx.fillRect(12, -2, 4, 4);
     }
     ctx.restore();
@@ -992,10 +1049,23 @@ function drawBullets() {
     ctx.beginPath(); ctx.arc(b.x, b.y, 3.5, 0, 7); ctx.fill();
   }
   for (const b of ebullets) {
-    ctx.fillStyle = 'rgba(255,60,80,0.35)';
-    ctx.beginPath(); ctx.arc(b.x, b.y, 8, 0, 7); ctx.fill();
-    ctx.fillStyle = '#ff4d5e';
-    ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, 7); ctx.fill();
+    if (b.boom) {
+      ctx.strokeStyle = '#93c5fd';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(b.x, b.y, 7, 0, 7); ctx.stroke();
+      const sa = frameNo * 0.3;
+      ctx.strokeStyle = '#e0f2fe';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(b.x - Math.cos(sa) * 7, b.y - Math.sin(sa) * 7);
+      ctx.lineTo(b.x + Math.cos(sa) * 7, b.y + Math.sin(sa) * 7);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = 'rgba(255,60,80,0.35)';
+      ctx.beginPath(); ctx.arc(b.x, b.y, 8, 0, 7); ctx.fill();
+      ctx.fillStyle = '#ff4d5e';
+      ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, 7); ctx.fill();
+    }
   }
 }
 
@@ -1212,6 +1282,7 @@ if (typeof window !== 'undefined') {
     get cam() { return cam; },
     get enemies() { return enemies; },
     get level() { return level; },
+    get ebullets() { return ebullets; },
     solidAt(tx, ty) { return solid(tx, ty); },
   };
 }
