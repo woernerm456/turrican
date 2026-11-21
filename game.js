@@ -15,6 +15,7 @@ let state = 'title', stateT = 0;
 let score = 0, lives = 3;
 let muted = false;
 let keys = {}, edge = {};
+let pad = {}, padPrev = {};
 let stars = [];
 let frameNo = 0;
 let AC = null;
@@ -244,12 +245,12 @@ function tryFire(p, dx, dy, left, right) {
 
 function updatePlayer() {
   const p = player;
-  const left = keys.ArrowLeft || keys.KeyA;
-  const right = keys.ArrowRight || keys.KeyD;
-  const up = keys.ArrowUp || keys.KeyW;
-  const down = keys.ArrowDown || keys.KeyS;
-  const jump = keys.KeyZ || keys.Space;
-  const fire = keys.KeyX || keys.KeyJ;
+  const left = kd('ArrowLeft') || kd('KeyA');
+  const right = kd('ArrowRight') || kd('KeyD');
+  const up = kd('ArrowUp') || kd('KeyW');
+  const down = kd('ArrowDown') || kd('KeyS');
+  const jump = kd('KeyZ') || kd('Space');
+  const fire = kd('KeyX') || kd('KeyJ');
   const dx = (right ? 1 : 0) - (left ? 1 : 0);
   const dy = (down ? 1 : 0) - (up ? 1 : 0);
   if (dx !== 0) {
@@ -474,8 +475,43 @@ function respawn() {
   state = 'play';
 }
 
+function kd(code) { return !!(keys[code] || pad[code]); }
+
+function readGamepad() {
+  pad = {};
+  if (typeof navigator === 'undefined' || !navigator.getGamepads) return;
+  const gps = navigator.getGamepads();
+  const gp = gps && gps[0];
+  if (!gp || !gp.connected) { padPrev = pad; return; }
+  const ax = gp.axes.length > 0 ? gp.axes[0] : 0;
+  const ay = gp.axes.length > 1 ? gp.axes[1] : 0;
+  const b = gp.buttons;
+  const bp = i => !!(b[i] && b[i].pressed);
+  const want = {
+    ArrowLeft: ax < -0.4 || bp(14),
+    ArrowRight: ax > 0.4 || bp(15),
+    ArrowUp: ay < -0.4 || bp(12),
+    ArrowDown: ay > 0.4 || bp(13),
+    KeyZ: bp(0) || bp(3),
+    Space: bp(0),
+    KeyX: bp(1) || bp(2) || bp(7),
+    KeyJ: bp(1) || bp(2) || bp(7),
+    Enter: bp(9),
+    KeyR: bp(9),
+    KeyP: bp(8),
+    KeyM: bp(4),
+  };
+  for (const code of Object.keys(want)) {
+    const p = !!want[code];
+    pad[code] = p;
+    if (p && !padPrev[code]) edge[code] = true;
+  }
+  padPrev = pad;
+}
+
 function update() {
   frameNo++;
+  readGamepad();
   if (edge.KeyM) muted = !muted;
   if (state === 'title') {
     if (edge.Enter || edge.Space) startGame();
@@ -840,6 +876,7 @@ function drawTitle() {
     'Z or SPACE      jump (hold for higher)',
     'X or J          fire - combine with directions for 8-way shots',
     'P pause    M mute    R restart',
+    'GAMEPAD: stick/d-pad move, A jump, B/X/RT fire, START begin',
     '',
     'Grab orbs, collect the star to upgrade your weapon,',
     'blast the aliens and reach the portal at the far end!',

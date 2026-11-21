@@ -16,6 +16,7 @@ HTML5 canvas + JavaScript. No build step, no dependencies — just open
 | P | pause |
 | M | mute |
 | R | restart (on the win / game-over screens) |
+| Gamepad (standard mapping) | left stick / D-pad = move & aim, A (bottom) = jump, B/X or RT = fire, START = start/restart, SELECT = pause, LB = mute |
 
 ## Features
 
