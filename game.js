@@ -366,13 +366,13 @@ function tryRocket() {
 function updatePlayer() {
   const p = player;
   const left = kd('ArrowLeft') || kd('KeyA');
-  const right = kd('ArrowRight') || kd('KeyD');
+  const right = kd('ArrowRight');
   const up = kd('ArrowUp') || kd('KeyW');
   const down = kd('ArrowDown') || kd('KeyS');
   const jump = kd('KeyZ') || kd('Space');
   const fire = kd('KeyX') || kd('KeyJ');
-  const jet = kd('KeyC') || kd('ShiftLeft') || kd('ShiftRight');
-  if (edge.KeyV) tryRocket();
+  const jet = kd('KeyC');
+  if (edge.KeyD) tryRocket();
   const dx = (right ? 1 : 0) - (left ? 1 : 0);
   const dy = (down ? 1 : 0) - (up ? 1 : 0);
   if (dx !== 0) {
@@ -731,7 +731,7 @@ function readGamepad() {
     KeyP: bp(8),
     KeyM: bp(4),
     KeyC: bp(5),
-    KeyV: bp(6),
+    KeyD: bp(6),
   };
   for (const code of Object.keys(want)) {
     const p = !!want[code];
@@ -1345,8 +1345,8 @@ function drawTitle() {
     'X or J          fire - combine with directions for 8-way shots',
     'P pause    M mute    R restart',
     'GAMEPAD: stick/d-pad move, A jump, B/X/RT fire, START begin',
-    'C or SHIFT   jetpack: fly 10s, recharges in 5s',
-    'V            rocket: 4x damage, 10s recharge',
+    'C            jetpack: fly 10s, recharges in 5s',
+    'D            rocket: 4x damage, 10s recharge',
     '',
     'Grab orbs, collect the star to upgrade your weapon,',
     'blast the enemies and clear all three sectors through the portals!',
@@ -1407,7 +1407,7 @@ function render() {
   }
 }
 
-const GAMEKEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyZ', 'KeyX', 'KeyJ', 'KeyA', 'KeyD', 'KeyW', 'KeyS', 'Space', 'Enter', 'KeyP', 'KeyR', 'KeyM', 'KeyC', 'KeyV', 'ShiftLeft', 'ShiftRight'];
+const GAMEKEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyZ', 'KeyX', 'KeyJ', 'KeyA', 'KeyW', 'KeyS', 'Space', 'Enter', 'KeyP', 'KeyR', 'KeyM', 'KeyC', 'KeyD'];
 
 function init() {
   canvas = document.getElementById('game');

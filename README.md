@@ -17,8 +17,8 @@ HTML5 canvas + JavaScript. No build step, no dependencies — just open
 | M | mute |
 | R | restart (on the win / game-over screens) |
 | Gamepad (standard mapping) | left stick / D-pad = move & aim, A (bottom) = jump, B/X or RT = fire, RB = jetpack, LT = rocket, START = start/restart, SELECT = pause, LB = mute |
-| C or Shift | **Jetpack**: fly for 10 s, then recharges over 5 s (fuel bar in HUD) |
-| V | **Rocket launcher**: 4× the damage of a normal shot, 10 s recharge (RCKT bar in HUD) |
+| C | **Jetpack**: fly for 10 s, then recharges over 5 s (JET fuel bar in HUD) |
+| D | **Rocket launcher**: 4× the damage of a normal shot, 10 s recharge (RCKT bar in HUD) |
 
 The player is twice as big as before; normal shots now deal half damage (0.5 per hit), rockets deal 4× that (2.0).
 
