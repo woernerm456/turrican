@@ -59,8 +59,11 @@ const sfx = {
   win() { [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => beep(f, 0.14, 'square', 0.09), i * 110)); },
 };
 
+function theme() { return level === 2 ? 'water' : level >= 3 ? 'mars' : 'lava'; }
+
 function buildLevel(n) {
-  if (n >= 2) return buildWaterLevel();
+  if (n >= 3) return buildMarsLevel();
+  if (n === 2) return buildWaterLevel();
   return buildLavaLevel();
 }
 
@@ -158,6 +161,46 @@ function buildWaterLevel() {
   return g;
 }
 
+function buildMarsLevel() {
+  const g = Array.from({ length: ROWS }, () => Array(COLS).fill(' '));
+  const fill = (x, y, w, h, c) => {
+    for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) {
+      if (i >= 0 && i < COLS && j >= 0 && j < ROWS) g[j][i] = c;
+    }
+  };
+  const plat = (x, y, w) => fill(x, y, w, 1, '#');
+  const put = (x, y, c) => { g[y][x] = c; };
+  fill(0, 15, COLS, 2, '#');
+  fill(0, 0, 1, ROWS, '#');
+  fill(COLS - 2, 0, 2, ROWS, '#');
+  [[20, 4], [48, 4], [78, 4], [108, 4]].forEach(([px, pw]) => {
+    fill(px, 15, pw, 1, ' ');
+    fill(px, 16, pw, 1, '^');
+  });
+  plat(8, 11, 3); plat(14, 8, 4);
+  plat(28, 10, 4); plat(35, 7, 4);
+  fill(41, 12, 2, 3, '#');
+  plat(56, 10, 4); plat(64, 8, 3);
+  plat(86, 10, 4); plat(94, 7, 4);
+  plat(118, 10, 4); plat(126, 8, 4); plat(136, 11, 3); plat(144, 8, 3);
+  [6, 7, 8].forEach(x => put(x, 13, 'o'));
+  put(15, 7, 'O');
+  put(29, 9, 'o'); put(30, 9, 'o'); put(36, 6, 'O');
+  put(57, 9, 'o'); put(65, 7, 'H'); put(87, 9, 'o');
+  put(95, 6, 'W');
+  put(119, 9, 'o'); put(120, 9, 'o'); put(127, 7, 'O');
+  put(137, 10, 'o'); put(145, 7, 'H');
+  put(150, 13, 'o'); put(151, 13, 'o');
+  put(12, 13, 'e'); put(30, 13, 'e'); put(58, 13, 'e'); put(90, 13, 'e'); put(120, 13, 'e'); put(132, 13, 'e');
+  put(17, 9, 'f'); put(38, 9, 'f'); put(70, 8, 'f'); put(99, 8, 'f'); put(129, 9, 'f');
+  put(52, 13, 't'); put(102, 13, 't');
+  put(76, 8, 'd'); put(122, 8, 'd');
+  put(146, 6, 'D');
+  put(3, 13, 'P');
+  put(157, 13, 'G');
+  return g;
+}
+
 function spawnFromMap() {
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
     const c = map[y][x];
@@ -170,7 +213,7 @@ function spawnFromMap() {
       enemies.push({ type: 'flyer', x: x * TILE + 4, y: y * TILE, baseY: y * TILE, w: 22, h: 18, dir: 1, hp: 1, flash: 0, t: 0 });
       map[y][x] = ' ';
     } else if (c === 't') {
-      enemies.push({ type: 'turret', blue: level >= 2, double: level >= 2, x: x * TILE + 2, y: y * TILE + 6, w: 28, h: 26, vx: 0, vy: 0, hp: 3, flash: 0, fire: 60 + Math.floor(Math.random() * 60), onGround: false });
+      enemies.push({ type: 'turret', blue: level === 2, double: level === 2, x: x * TILE + 2, y: y * TILE + 6, w: 28, h: 26, vx: 0, vy: 0, hp: 3, flash: 0, fire: 60 + Math.floor(Math.random() * 60), onGround: false });
       map[y][x] = ' ';
     } else if (c === 'r') {
       enemies.push({ type: 'robot', x: x * TILE + 3, y: y * TILE + 6, w: 26, h: 26, vx: 0, vy: 0, dir: Math.random() < 0.5 ? -1 : 1, hp: 3, flash: 0, onGround: false, atkCd: 90 + Math.floor(Math.random() * 60) });
@@ -579,7 +622,7 @@ function updatePickups() {
 function checkGoal() {
   const p = player;
   if (goal && p.x < goal.x + goal.w && p.x + p.w > goal.x && p.y < goal.y + goal.h && p.y + p.h > goal.y) {
-    if (level >= 2) {
+    if (level >= 3) {
       state = 'win';
       score += 1000 + lives * 500;
     } else {
@@ -600,7 +643,7 @@ function updateCamera() {
 function startGame(resetAll) {
   if (resetAll) { level = 1; score = 0; lives = 3; }
   const wpn = resetAll ? 1 : (player ? player.weapon : 1);
-  stars = makeSky(level >= 2 ? 'water' : 'lava');
+  stars = makeSky(theme());
   map = buildLevel(level);
   enemies = [];
   pickups = [];
@@ -702,7 +745,7 @@ function frac(v) { return v - Math.floor(v); }
 
 function makeSky(theme) {
   const arr = [];
-  const cols = theme === 'water' ? ['#bfefff', '#67e8f9', '#e0f2fe', '#38bdf8'] : ['#ffd23d', '#ff9a1f', '#ff6a00', '#ff3d00'];
+  const cols = theme === 'water' ? ['#bfefff', '#67e8f9', '#e0f2fe', '#38bdf8'] : theme === 'mars' ? ['#f5c08a', '#e7a06a', '#d97742', '#c2410c'] : ['#ffd23d', '#ff9a1f', '#ff6a00', '#ff3d00'];
   for (let i = 0; i < 130; i++) {
     arr.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() < 0.6 ? 2 : 3, p: Math.random() * 6.28, vy: 0.2 + Math.random() * 0.7, c: cols[(Math.random() * cols.length) | 0] });
   }
@@ -710,12 +753,17 @@ function makeSky(theme) {
 }
 
 function drawBG() {
-  const water = level >= 2;
+  const th = theme();
   const g = ctx.createLinearGradient(0, 0, 0, H);
-  if (water) {
+  if (th === 'water') {
     g.addColorStop(0, '#010d18');
     g.addColorStop(0.55, '#013a5c');
     g.addColorStop(1, '#0a6ea8');
+  } else if (th === 'mars') {
+    g.addColorStop(0, '#3a1408');
+    g.addColorStop(0.5, '#7a3416');
+    g.addColorStop(0.85, '#b85c2a');
+    g.addColorStop(1, '#d97b42');
   } else {
     g.addColorStop(0, '#2a0700');
     g.addColorStop(0.45, '#6b1a00');
@@ -724,7 +772,8 @@ function drawBG() {
   }
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
-  if (water) drawRays();
+  if (th === 'water') drawRays();
+  if (th === 'mars') drawMoons();
   for (const s of stars) {
     const ex = ((s.x - cam.x * 0.15 + Math.sin(frameNo * 0.05 + s.p) * 8) % W + W) % W;
     const ey = ((s.y - frameNo * s.vy) % H + H) % H;
@@ -733,14 +782,66 @@ function drawBG() {
     ctx.fillRect(ex, ey, s.r, s.r);
   }
   ctx.globalAlpha = 1;
-  if (water) {
+  if (th === 'water') {
     ridge(0.35, 200, 150, '#04263b', '#22d3ee');
     ridge(0.6, 260, 110, '#062f4d', '#67e8f9');
     drawSand();
+  } else if (th === 'mars') {
+    ridge(0.35, 200, 150, '#3d0f0a', '#fb923c');
+    ridge(0.6, 260, 110, '#521709', '#fdba74');
+    drawMarsGround();
   } else {
     ridge(0.35, 200, 150, '#200502', '#ff5a00');
     ridge(0.6, 260, 110, '#330a03', '#ff8a00');
     drawLava();
+  }
+}
+function drawMoons() {
+  const span = W + 300;
+  const x1 = ((W * 0.72 - cam.x * 0.05) % span + span) % span - 150;
+  const x2 = ((W * 0.22 - cam.x * 0.09) % span + span) % span - 150;
+  ctx.fillStyle = '#e8d5c0';
+  ctx.beginPath(); ctx.arc(x1, 80, 24, 0, 7); ctx.fill();
+  ctx.fillStyle = '#cbb49e';
+  ctx.beginPath(); ctx.arc(x1 - 7, 74, 6, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(x1 + 8, 88, 4, 0, 7); ctx.fill();
+  ctx.fillStyle = '#d9c6b2';
+  ctx.beginPath(); ctx.arc(x2, 150, 13, 0, 7); ctx.fill();
+  ctx.fillStyle = '#b8a48f';
+  ctx.beginPath(); ctx.arc(x2 + 3, 146, 3.5, 0, 7); ctx.fill();
+}
+function drawMarsGround() {
+  const off = cam.x * 0.1;
+  const baseY = H - 70;
+  const glow = ctx.createLinearGradient(0, baseY - 120, 0, H);
+  glow.addColorStop(0, 'rgba(251,146,60,0)');
+  glow.addColorStop(1, 'rgba(251,146,60,0.3)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, baseY - 120, W, H - baseY + 120);
+  ctx.fillStyle = '#7c2d12';
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (let x = 0; x <= W + 16; x += 16) {
+    ctx.lineTo(x, baseY + Math.sin((x + off) * 0.02 + frameNo * 0.04) * 6);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#b45309';
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (let x = 0; x <= W + 16; x += 16) {
+    ctx.lineTo(x, baseY + 8 + Math.sin((x + off) * 0.03 - frameNo * 0.05) * 4);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#5c1f0d';
+  for (let i = 0; i < 6; i++) {
+    const cx = ((i * 330 - off) % (W + 200) + W + 200) % (W + 200) - 100;
+    ctx.beginPath();
+    ctx.ellipse(cx, baseY + 20 + (i % 3) * 9, 20, 5, 0, 0, 7);
+    ctx.fill();
   }
 }
 function drawRays() {
@@ -1078,7 +1179,7 @@ function drawPlayer() {
   if (p.dir < 0) ctx.scale(-1, 1);
   const run = Math.abs(p.vx) > 0.4 && p.onGround;
   const lp = run ? Math.sin(frameNo * 0.35) * 4 : 0;
-  const water = level >= 2;
+  const water = theme() === 'water';
   ctx.fillStyle = water ? '#14532d' : '#3a3a5e';
   ctx.fillRect(-7 + lp, 8, 6, 6);
   ctx.fillRect(1 - lp, 8, 6, 6);
@@ -1172,7 +1273,7 @@ function drawTitle() {
     'GAMEPAD: stick/d-pad move, A jump, B/X/RT fire, START begin',
     '',
     'Grab orbs, collect the star to upgrade your weapon,',
-    'blast the enemies and clear both sectors through the portals!',
+    'blast the enemies and clear all three sectors through the portals!',
   ];
   ctx.font = '16px monospace';
   ctx.textAlign = 'center';
@@ -1216,7 +1317,7 @@ function render() {
   } else if (state === 'levelclear') {
     overlay(0.6);
     centerText('LEVEL ' + level + ' CLEAR!', H / 2 - 30, 48, '#22d3ee', true);
-    centerText('next: the flooded sector...', H / 2 + 24, 18, '#a5b4fc');
+    centerText(level === 1 ? 'next: the flooded sector...' : 'next: the red planet MARS...', H / 2 + 24, 18, '#a5b4fc');
   } else if (state === 'gameover') {
     overlay(0.75);
     centerText('GAME OVER', H / 2 - 40, 56, '#ff3b5c', true);

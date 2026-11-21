@@ -26,12 +26,15 @@ HTML5 canvas + JavaScript. No build step, no dependencies — just open
 - 4 enemy types: ground walkers, flying bats, aimed turrets, and "Dreher"
   wheels — rotating dark-red wheels that chase you and fire radial bursts in all 8 directions
 - plus a big "Dreher" near the end of each level: double HP (8), fires 3x as fast, 1000 pts
-- Two levels: the lava sector, then — through the portal — a flooded water sector
-  (blue water background, light rays, bubbles, sand floor). In level 2 the player
-  is recolored green/blue. Level 2 enemies: green fish that swim at you and bite on
-  contact, a "Riesen-Fisch" (giant fish, 8 HP) near the end that fires an aimed shot
-  every second, blue cannons that fire two shots per volley, and 5 ground robots
-  that throw a boomerang disc at you which flies to you and returns to the robot
+- Three levels, each reached through a portal: level 1 lava sector, level 2
+  flooded water sector (blue water background, light rays, bubbles, sand floor; the
+  player is recolored green/blue there), level 3 the red planet MARS (orange-red sky
+  with two moons, drifting dust, rust-colored ground with craters)
+- Level 2 enemies: green fish that swim at you and bite on contact, a "Riesen-Fisch"
+  (giant fish, 8 HP) near the end that fires an aimed shot every second, blue cannons
+  that fire two shots per volley, and 5 ground robots that throw a boomerang disc
+  at you which flies to you and returns to the robot
+- Level 3 (Mars) mixes walkers, flyers, turrets, Dreher wheels and a big Dreher
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
 - Animated fire & lava background everywhere (ember sky, basalt ridges, lava sea), screen shake, particles, floating score text
 - WebAudio chiptune-style sound effects (mutable with M)
