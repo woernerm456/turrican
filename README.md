@@ -27,8 +27,9 @@ HTML5 canvas + JavaScript. No build step, no dependencies — just open
   wheels — rotating dark-red wheels that chase you and fire radial bursts in all 8 directions
 - plus a big "Dreher" near the end of each level: double HP (8), fires 3x as fast, 1000 pts
 - Two levels: the lava sector, then — through the portal — a flooded water sector
-  (blue water background, light rays, bubbles, sand floor) with attacking fish
-  that swim at you and bite on contact
+  (blue water background, light rays, bubbles, sand floor). Level 2 contains only
+  fish — attacking fish that swim at you and bite on contact; all enemy types
+  shared with level 1 were removed there
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
 - Animated fire & lava background everywhere (ember sky, basalt ridges, lava sea), screen shake, particles, floating score text
 - WebAudio chiptune-style sound effects (mutable with M)

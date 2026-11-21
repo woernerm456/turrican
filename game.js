@@ -2,7 +2,7 @@
 (function () {
 const TILE = 32, ROWS = 17, COLS = 160;
 const W = 960, H = 540;
-const GRAV = 0.55, MAXFALL = 13, RUN = 3.2, JUMPV = -14.85;
+const GRAV = 0.55, MAXFALL = 13, RUN = 3.2, JUMPV = -20.41875;
 
 let canvas, ctx;
 let map = [];
@@ -150,9 +150,6 @@ function buildWaterLevel() {
   put(14, 12, 's'); put(20, 9, 's'); put(36, 12, 's'); put(48, 9, 's');
   put(66, 12, 's'); put(80, 9, 's'); put(100, 12, 's'); put(112, 9, 's');
   put(124, 12, 's'); put(134, 10, 's');
-  put(60, 13, 't'); put(108, 13, 't');
-  put(86, 8, 'd');
-  put(140, 7, 'D');
   put(3, 13, 'P');
   put(157, 13, 'G');
   return g;
