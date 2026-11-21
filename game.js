@@ -12,6 +12,7 @@ let player = null;
 let cam = { x: 0 };
 let shake = 0;
 let state = 'title', stateT = 0;
+let level = 1;
 let score = 0, lives = 3;
 let muted = false;
 let keys = {}, edge = {};
@@ -58,7 +59,12 @@ const sfx = {
   win() { [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => beep(f, 0.14, 'square', 0.09), i * 110)); },
 };
 
-function buildLevel() {
+function buildLevel(n) {
+  if (n >= 2) return buildWaterLevel();
+  return buildLavaLevel();
+}
+
+function buildLavaLevel() {
   const g = Array.from({ length: ROWS }, () => Array(COLS).fill(' '));
   const fill = (x, y, w, h, c) => {
     for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) {
@@ -110,6 +116,48 @@ function buildLevel() {
   return g;
 }
 
+function buildWaterLevel() {
+  const g = Array.from({ length: ROWS }, () => Array(COLS).fill(' '));
+  const fill = (x, y, w, h, c) => {
+    for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) {
+      if (i >= 0 && i < COLS && j >= 0 && j < ROWS) g[j][i] = c;
+    }
+  };
+  const plat = (x, y, w) => fill(x, y, w, 1, '#');
+  const put = (x, y, c) => { g[y][x] = c; };
+  fill(0, 15, COLS, 2, '#');
+  fill(0, 0, 1, ROWS, '#');
+  fill(COLS - 2, 0, 2, ROWS, '#');
+  [[24, 4], [55, 4], [90, 4]].forEach(([px, pw]) => {
+    fill(px, 15, pw, 1, ' ');
+    fill(px, 16, pw, 1, '^');
+  });
+  plat(10, 11, 4); plat(16, 8, 4);
+  plat(33, 10, 4); plat(40, 7, 5);
+  plat(62, 10, 4); plat(70, 8, 4); plat(78, 11, 3);
+  plat(98, 10, 5); plat(108, 7, 4);
+  plat(118, 10, 4); plat(126, 8, 3); plat(134, 11, 3);
+  [7, 8, 9].forEach(x => put(x, 13, 'o'));
+  put(17, 7, 'O');
+  put(34, 9, 'o'); put(35, 9, 'o'); put(41, 6, 'O');
+  put(63, 9, 'o'); put(71, 7, 'H'); put(79, 10, 'o');
+  put(99, 9, 'W');
+  put(109, 6, 'O');
+  put(119, 9, 'o'); put(120, 9, 'o');
+  put(127, 7, 'O');
+  put(135, 10, 'o');
+  put(150, 13, 'o'); put(151, 13, 'o');
+  put(14, 12, 's'); put(20, 9, 's'); put(36, 12, 's'); put(48, 9, 's');
+  put(66, 12, 's'); put(80, 9, 's'); put(100, 12, 's'); put(112, 9, 's');
+  put(124, 12, 's'); put(134, 10, 's');
+  put(60, 13, 't'); put(108, 13, 't');
+  put(86, 8, 'd');
+  put(140, 7, 'D');
+  put(3, 13, 'P');
+  put(157, 13, 'G');
+  return g;
+}
+
 function spawnFromMap() {
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
     const c = map[y][x];
@@ -123,6 +171,9 @@ function spawnFromMap() {
       map[y][x] = ' ';
     } else if (c === 't') {
       enemies.push({ type: 'turret', x: x * TILE + 2, y: y * TILE + 6, w: 28, h: 26, vx: 0, vy: 0, hp: 3, flash: 0, fire: 60 + Math.floor(Math.random() * 60), onGround: false });
+      map[y][x] = ' ';
+    } else if (c === 's') {
+      enemies.push({ type: 'fish', x: x * TILE + 3, y: y * TILE, baseY: y * TILE, w: 26, h: 16, dir: Math.random() < 0.5 ? -1 : 1, hp: 2, flash: 0, t: Math.floor(Math.random() * 40) });
       map[y][x] = ' ';
     } else if (c === 'd') {
       enemies.push({ type: 'dreher', big: false, x: x * TILE + 1, y: y * TILE + 1, w: 30, h: 30, dir: 1, hp: 4, flash: 0, t: 0, rot: 0, fire: 90 + Math.floor(Math.random() * 60) });
@@ -329,9 +380,9 @@ function checkEnemyContact(p) {
 
 function killEnemy(e) {
   e.dead = true;
-  const pts = e.type === 'turret' ? 300 : e.type === 'flyer' ? 150 : e.type === 'dreher' ? (e.big ? 1000 : 400) : 100;
+  const pts = e.type === 'turret' ? 300 : e.type === 'flyer' ? 150 : e.type === 'dreher' ? (e.big ? 1000 : 400) : e.type === 'fish' ? 200 : 100;
   score += pts;
-  burst(e.x + e.w / 2, e.y + e.h / 2, 18, e.type === 'flyer' ? '#f87171' : '#dc2626');
+  burst(e.x + e.w / 2, e.y + e.h / 2, 18, e.type === 'flyer' || e.type === 'fish' ? '#f87171' : '#dc2626');
   addText('+' + pts, e.x + e.w / 2, e.y, '#7dd3fc');
   sfx.boom();
   shake = Math.max(shake, 6);
@@ -360,6 +411,23 @@ function updateEnemies() {
       if (solid(Math.floor(wx / TILE), Math.floor((e.y + e.h / 2) / TILE))) e.dir *= -1;
       e.x = Math.max(TILE, Math.min(COLS * TILE - TILE - e.w, e.x));
       e.y = Math.max(TILE, e.baseY + Math.sin(e.t * 0.05) * 26);
+    } else if (e.type === 'fish') {
+      e.t++;
+      const dx = player.x + player.w / 2 - (e.x + e.w / 2);
+      const dy = player.y + player.h / 2 - (e.y + e.h / 2);
+      const d = Math.hypot(dx, dy);
+      if (d < 520 && Math.abs(dy) < 220 && state === 'play') {
+        e.dir = dx < 0 ? -1 : 1;
+        e.x += e.dir * 1.5;
+        e.y += (dy / (Math.abs(dy) + 60)) * 1.4;
+      } else {
+        e.x += e.dir * 0.7;
+        e.y = Math.max(TILE, e.baseY + Math.sin(e.t * 0.07) * 22);
+      }
+      const wx = e.dir > 0 ? e.x + e.w + 2 : e.x - 2;
+      if (solid(Math.floor(wx / TILE), Math.floor((e.y + e.h / 2) / TILE))) e.dir *= -1;
+      e.x = Math.max(TILE, Math.min(COLS * TILE - TILE - e.w, e.x));
+      e.y = Math.max(TILE, Math.min(13 * TILE, e.y));
     } else if (e.type === 'dreher') {
       e.rot += 0.09;
       e.t++;
@@ -462,8 +530,14 @@ function updatePickups() {
 function checkGoal() {
   const p = player;
   if (goal && p.x < goal.x + goal.w && p.x + p.w > goal.x && p.y < goal.y + goal.h && p.y + p.h > goal.y) {
-    state = 'win';
-    score += 1000 + lives * 500;
+    if (level >= 2) {
+      state = 'win';
+      score += 1000 + lives * 500;
+    } else {
+      state = 'levelclear';
+      stateT = 150;
+      score += 500;
+    }
     sfx.win();
   }
 }
@@ -474,8 +548,11 @@ function updateCamera() {
   if (Math.abs(target - cam.x) < 0.5) cam.x = target;
 }
 
-function startGame() {
-  map = buildLevel();
+function startGame(resetAll) {
+  if (resetAll) { level = 1; score = 0; lives = 3; }
+  const wpn = resetAll ? 1 : (player ? player.weapon : 1);
+  stars = makeSky(level >= 2 ? 'water' : 'lava');
+  map = buildLevel(level);
   enemies = [];
   pickups = [];
   bullets = [];
@@ -484,9 +561,7 @@ function startGame() {
   goal = null;
   spawn = { x: 64, y: 400 };
   spawnFromMap();
-  player = { x: spawn.x, y: spawn.y, w: 20, h: 28, vx: 0, vy: 0, dir: 1, onGround: false, coyote: 0, jumpBuf: 0, fireCd: 0, invuln: 0, hp: 3, weapon: 1, aim: { x: 1, y: 0 } };
-  score = 0;
-  lives = 3;
+  player = { x: spawn.x, y: spawn.y, w: 20, h: 28, vx: 0, vy: 0, dir: 1, onGround: false, coyote: 0, jumpBuf: 0, fireCd: 0, invuln: 90, hp: 3, weapon: wpn, aim: { x: 1, y: 0 } };
   shake = 0;
   cam.x = 0;
   state = 'play';
@@ -545,7 +620,7 @@ function update() {
   readGamepad();
   if (edge.KeyM) muted = !muted;
   if (state === 'title') {
-    if (edge.Enter || edge.Space) startGame();
+    if (edge.Enter || edge.Space) startGame(true);
   } else if (state === 'play') {
     if (edge.KeyP) { state = 'pause'; return; }
     updatePlayer();
@@ -555,6 +630,10 @@ function update() {
     updateParticles();
     checkGoal();
     updateCamera();
+  } else if (state === 'levelclear') {
+    updateParticles();
+    stateT--;
+    if (stateT <= 0) { level++; startGame(false); }
   } else if (state === 'pause') {
     if (edge.KeyP) state = 'play';
   } else if (state === 'dying') {
@@ -566,20 +645,37 @@ function update() {
     }
   } else if (state === 'gameover' || state === 'win') {
     updateParticles();
-    if (edge.KeyR) startGame();
+    if (edge.KeyR) startGame(true);
   }
 }
 
 function frac(v) { return v - Math.floor(v); }
 
+function makeSky(theme) {
+  const arr = [];
+  const cols = theme === 'water' ? ['#bfefff', '#67e8f9', '#e0f2fe', '#38bdf8'] : ['#ffd23d', '#ff9a1f', '#ff6a00', '#ff3d00'];
+  for (let i = 0; i < 130; i++) {
+    arr.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() < 0.6 ? 2 : 3, p: Math.random() * 6.28, vy: 0.2 + Math.random() * 0.7, c: cols[(Math.random() * cols.length) | 0] });
+  }
+  return arr;
+}
+
 function drawBG() {
+  const water = level >= 2;
   const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#2a0700');
-  g.addColorStop(0.45, '#6b1a00');
-  g.addColorStop(0.8, '#a83000');
-  g.addColorStop(1, '#d04800');
+  if (water) {
+    g.addColorStop(0, '#010d18');
+    g.addColorStop(0.55, '#013a5c');
+    g.addColorStop(1, '#0a6ea8');
+  } else {
+    g.addColorStop(0, '#2a0700');
+    g.addColorStop(0.45, '#6b1a00');
+    g.addColorStop(0.8, '#a83000');
+    g.addColorStop(1, '#d04800');
+  }
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
+  if (water) drawRays();
   for (const s of stars) {
     const ex = ((s.x - cam.x * 0.15 + Math.sin(frameNo * 0.05 + s.p) * 8) % W + W) % W;
     const ey = ((s.y - frameNo * s.vy) % H + H) % H;
@@ -588,9 +684,58 @@ function drawBG() {
     ctx.fillRect(ex, ey, s.r, s.r);
   }
   ctx.globalAlpha = 1;
-  ridge(0.35, 200, 150, '#200502', '#ff5a00');
-  ridge(0.6, 260, 110, '#330a03', '#ff8a00');
-  drawLava();
+  if (water) {
+    ridge(0.35, 200, 150, '#04263b', '#22d3ee');
+    ridge(0.6, 260, 110, '#062f4d', '#67e8f9');
+    drawSand();
+  } else {
+    ridge(0.35, 200, 150, '#200502', '#ff5a00');
+    ridge(0.6, 260, 110, '#330a03', '#ff8a00');
+    drawLava();
+  }
+}
+function drawRays() {
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  ctx.fillStyle = '#bfefff';
+  for (let i = 0; i < 5; i++) {
+    const bx = ((i * 260 - cam.x * 0.2) % (W + 400) + W + 400) % (W + 400) - 200;
+    ctx.beginPath();
+    ctx.moveTo(bx, 0);
+    ctx.lineTo(bx + 60, 0);
+    ctx.lineTo(bx + 160, H);
+    ctx.lineTo(bx + 60, H);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function drawSand() {
+  const off = cam.x * 0.1;
+  const baseY = H - 70;
+  const glow = ctx.createLinearGradient(0, baseY - 120, 0, H);
+  glow.addColorStop(0, 'rgba(56,189,248,0)');
+  glow.addColorStop(1, 'rgba(56,189,248,0.25)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, baseY - 120, W, H - baseY + 120);
+  ctx.fillStyle = '#7a5c2e';
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (let x = 0; x <= W + 16; x += 16) {
+    ctx.lineTo(x, baseY + Math.sin((x + off) * 0.02 + frameNo * 0.04) * 6);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#c9a86a';
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  for (let x = 0; x <= W + 16; x += 16) {
+    ctx.lineTo(x, baseY + 8 + Math.sin((x + off) * 0.03 - frameNo * 0.05) * 4);
+  }
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
 }
 function ridge(par, step, maxH, color, glow) {
   const off = cam.x * par;
@@ -779,6 +924,19 @@ function drawEnemies() {
       ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#fbbf24';
       ctx.beginPath(); ctx.arc(0, -1, 3, 0, 7); ctx.fill();
+    } else if (e.type === 'fish') {
+      if (e.dir < 0) ctx.scale(-1, 1);
+      ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#7f1d1d';
+      ctx.beginPath(); ctx.ellipse(0, 0, 13, 8, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = e.flash > 0 ? '#ffffff' : '#b91c1c';
+      ctx.beginPath();
+      ctx.moveTo(-11, 0); ctx.lineTo(-19, -7); ctx.lineTo(-19, 7);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-2, -7); ctx.lineTo(3, -12); ctx.lineTo(6, -7);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath(); ctx.arc(7, -2, 2.5, 0, 7); ctx.fill();
     } else if (e.type === 'dreher') {
       const R = e.big ? 24 : 13;
       const spokes = e.big ? 8 : 6;
@@ -897,6 +1055,8 @@ function drawHUD() {
   ctx.fillText('x' + lives, 92, 18);
   ctx.fillStyle = '#fbbf24';
   ctx.fillText('WPN ' + player.weapon, 150, 18);
+  ctx.fillStyle = '#a5b4fc';
+  ctx.fillText('LV' + level, 225, 18);
   ctx.textAlign = 'right';
   ctx.fillStyle = '#7dd3fc';
   ctx.fillText('SCORE ' + String(score).padStart(6, '0'), W - 14, 18);
@@ -928,7 +1088,7 @@ function drawTitle() {
     'GAMEPAD: stick/d-pad move, A jump, B/X/RT fire, START begin',
     '',
     'Grab orbs, collect the star to upgrade your weapon,',
-    'blast the aliens and reach the portal at the far end!',
+    'blast the enemies and clear both sectors through the portals!',
   ];
   ctx.font = '16px monospace';
   ctx.textAlign = 'center';
@@ -959,7 +1119,7 @@ function render() {
     ctx.restore();
   }
   ctx.restore();
-  if (state === 'play' || state === 'dying' || state === 'pause') drawHUD();
+  if (state === 'play' || state === 'dying' || state === 'pause' || state === 'levelclear') drawHUD();
   if (state === 'title') {
     drawTitle();
   } else if (state === 'pause') {
@@ -969,6 +1129,10 @@ function render() {
   } else if (state === 'dying') {
     ctx.fillStyle = 'rgba(255,40,60,' + (stateT / 55) * 0.35 + ')';
     ctx.fillRect(0, 0, W, H);
+  } else if (state === 'levelclear') {
+    overlay(0.6);
+    centerText('LEVEL ' + level + ' CLEAR!', H / 2 - 30, 48, '#22d3ee', true);
+    centerText('next: the flooded sector...', H / 2 + 24, 18, '#a5b4fc');
   } else if (state === 'gameover') {
     overlay(0.75);
     centerText('GAME OVER', H / 2 - 40, 56, '#ff3b5c', true);
@@ -987,10 +1151,7 @@ const GAMEKEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'KeyZ', 'Ke
 function init() {
   canvas = document.getElementById('game');
   ctx = canvas.getContext('2d');
-  for (let i = 0; i < 130; i++) {
-    const cols = ['#ffd23d', '#ff9a1f', '#ff6a00', '#ff3d00'];
-    stars.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() < 0.6 ? 2 : 3, p: Math.random() * 6.28, vy: 0.2 + Math.random() * 0.7, c: cols[(Math.random() * cols.length) | 0] });
-  }
+  stars = makeSky('lava');
   window.addEventListener('keydown', e => {
     if (GAMEKEYS.indexOf(e.code) >= 0) e.preventDefault();
     if (!keys[e.code]) edge[e.code] = true;
@@ -1036,6 +1197,7 @@ if (typeof window !== 'undefined') {
     get lives() { return lives; },
     get cam() { return cam; },
     get enemies() { return enemies; },
+    get level() { return level; },
     solidAt(tx, ty) { return solid(tx, ty); },
   };
 }
