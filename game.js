@@ -604,7 +604,7 @@ function updateEnemies() {
       const dx = player.x + player.w / 2 - (e.x + e.w / 2);
       const dy = player.y + player.h / 2 - (e.y + e.h / 2);
       const d = Math.hypot(dx, dy) || 1;
-      const spd = 2.3;
+      const spd = 1.15;
       e.x += dx / d * spd;
       e.y += dy / d * spd * 0.8;
       e.x = Math.max(TILE, Math.min(COLS * TILE - TILE - e.w, e.x));
