@@ -264,10 +264,8 @@ function buildStationLevel2() {
   plat(82, 11, 3); plat(90, 8, 3); plat(98, 12, 3);
   plat(108, 9, 4); plat(116, 12, 3); plat(122, 8, 3);
   plat(132, 11, 3); plat(140, 8, 3); plat(148, 11, 3);
-  [10, 26, 38, 54, 66, 82, 94, 112, 134, 146].forEach(x => put(x, 13, 't'));
-  [14, 32, 58, 86, 108, 122, 140].forEach(x => put(x, 13, 'a'));
-  [24, 62, 90, 118].forEach(x => put(x, 13, 'd'));
-  put(136, 13, 'D');
+  [10, 26, 38, 54, 66, 82, 94, 112, 134, 146].forEach(x => put(x, 13, 'k'));
+  put(30, 13, 'S');
   put(7, 10, 'o'); put(14, 7, 'O'); put(25, 9, 'o'); put(32, 6, 'o'); put(39, 9, 'H');
   put(53, 8, 'o'); put(67, 7, 'O'); put(83, 10, 'o'); put(91, 7, 'o'); put(109, 8, 'o');
   put(123, 7, 'H'); put(141, 7, 'o'); put(149, 10, 'o');
@@ -301,6 +299,12 @@ function spawnFromMap() {
       map[y][x] = ' ';
     } else if (c === 'a') {
       enemies.push({ type: 'alien', x: x * TILE - 10, y: y * TILE - 20, w: 52, h: 52, vx: 0, vy: 0, dir: Math.random() < 0.5 ? -1 : 1, hp: 3, flash: 0, onGround: false, atkCd: 80 + Math.floor(Math.random() * 60) });
+      map[y][x] = ' ';
+    } else if (c === 'S') {
+      enemies.push({ type: 'snake', x: x * TILE - 80, y: y * TILE - 32, w: 192, h: 64, vx: 0, vy: 0, dir: -1, hp: 20, flash: 0, onGround: false, t: 0 });
+      map[y][x] = ' ';
+    } else if (c === 'k') {
+      enemies.push({ type: 'scorpion', x: x * TILE - 4, y: y * TILE - 12, w: 40, h: 32, vx: 0, vy: 0, dir: -1, hp: 2, flash: 0, onGround: false, fire: 70 + Math.floor(Math.random() * 60) });
       map[y][x] = ' ';
     } else if (c === 'X') {
       enemies.push({ type: 'hunter', x: x * TILE - 96, y: y * TILE - 96, w: 256, h: 256, dir: 1, hp: 999999, immortal: true, flash: 0, t: 0 });
@@ -521,7 +525,7 @@ function checkEnemyContact(p) {
     if (e.dead) continue;
     if (p.x < e.x + e.w && p.x + p.w > e.x && p.y < e.y + e.h && p.y + p.h > e.y) {
       const cx = (p.x + p.w / 2) - (e.x + e.w / 2);
-      hurt(e.type === 'hunter' ? 2 : 1, (cx < 0 ? -1 : 1) * 5, -7);
+      hurt(e.type === 'hunter' || e.type === 'snake' ? 2 : 1, (cx < 0 ? -1 : 1) * 5, -7);
       if (e.type !== 'turret' && !e.immortal) {
         e.hp--;
         e.flash = 6;
@@ -534,9 +538,9 @@ function checkEnemyContact(p) {
 
 function killEnemy(e) {
   e.dead = true;
-  const pts = e.type === 'turret' ? 300 : e.type === 'flyer' ? 150 : e.type === 'dreher' ? (e.big ? 1000 : 400) : e.type === 'fish' ? (e.big ? 1200 : 200) : e.type === 'robot' ? 250 : e.type === 'alien' ? 250 : e.type === 'boss' ? 5000 : 100;
+  const pts = e.type === 'turret' ? 300 : e.type === 'flyer' ? 150 : e.type === 'dreher' ? (e.big ? 1000 : 400) : e.type === 'fish' ? (e.big ? 1200 : 200) : e.type === 'robot' ? 250 : e.type === 'alien' ? 250 : e.type === 'snake' ? 800 : e.type === 'scorpion' ? 150 : e.type === 'boss' ? 5000 : 100;
   score += pts;
-  burst(e.x + e.w / 2, e.y + e.h / 2, e.type === 'boss' ? 40 : e.big ? 30 : 18, e.type === 'fish' ? '#4ade80' : e.type === 'flyer' ? '#f87171' : e.type === 'robot' ? '#94a3b8' : e.type === 'alien' ? '#4ade80' : e.type === 'boss' ? '#ff3b5c' : '#dc2626');
+  burst(e.x + e.w / 2, e.y + e.h / 2, e.type === 'boss' ? 40 : e.big ? 30 : 18, e.type === 'fish' ? '#4ade80' : e.type === 'flyer' ? '#f87171' : e.type === 'robot' ? '#94a3b8' : e.type === 'alien' ? '#4ade80' : e.type === 'snake' ? '#a3e635' : e.type === 'scorpion' ? '#f97316' : e.type === 'boss' ? '#ff3b5c' : '#dc2626');
   addText('+' + pts, e.x + e.w / 2, e.y, '#7dd3fc');
   sfx.boom();
   shake = Math.max(shake, 6);
@@ -646,6 +650,39 @@ function updateEnemies() {
       e.x = Math.max(TILE, Math.min(COLS * TILE - TILE - e.w, e.x));
       e.y = Math.max(TILE, Math.min(ROWS * TILE - e.h - TILE, e.y));
       if (Math.abs(dx) > 4) e.dir = dx < 0 ? -1 : 1;
+    } else if (e.type === 'snake') {
+      e.t++;
+      e.vy = Math.min(MAXFALL, e.vy + GRAV);
+      const dx = player.x + player.w / 2 - (e.x + e.w / 2);
+      if (Math.abs(dx) > 8) e.dir = dx < 0 ? -1 : 1;
+      e.vx = e.dir * 1.0;
+      const hitWall = moveAndCollide(e);
+      if (hitWall) e.dir *= -1;
+      if (e.onGround) {
+        const aheadX = e.dir > 0 ? e.x + e.w + 3 : e.x - 3;
+        if (!solid(Math.floor(aheadX / TILE), Math.floor((e.y + e.h + 4) / TILE))) e.dir *= -1;
+      }
+      e.x = Math.max(TILE, Math.min(COLS * TILE - TILE - e.w, e.x));
+    } else if (e.type === 'scorpion') {
+      e.vy = Math.min(MAXFALL, e.vy + GRAV);
+      const dx = player.x + player.w / 2 - (e.x + e.w / 2);
+      const dy = player.y + player.h / 2 - (e.y + e.h / 2);
+      const d = Math.hypot(dx, dy);
+      if (Math.abs(dx) > 8) e.dir = dx < 0 ? -1 : 1;
+      e.vx = e.dir * 0.9;
+      const hitWall = moveAndCollide(e);
+      if (hitWall) e.dir *= -1;
+      if (e.onGround) {
+        const aheadX = e.dir > 0 ? e.x + e.w + 3 : e.x - 3;
+        if (!solid(Math.floor(aheadX / TILE), Math.floor((e.y + e.h + 4) / TILE))) e.dir *= -1;
+      }
+      e.fire--;
+      if (e.fire <= 0 && d < 460 && Math.abs(dy) < 160 && state === 'play') {
+        e.fire = 90;
+        const a = Math.atan2(dy, dx);
+        if (ebullets.length < 40) ebullets.push({ x: e.x + e.w / 2 + Math.cos(a) * 20, y: e.y + e.h / 2 + Math.sin(a) * 8, vx: Math.cos(a) * 4.2, vy: Math.sin(a) * 4.2, fire: true });
+        sfx.eshoot();
+      }
     } else if (e.type === 'boss') {
       e.t++;
       e.rot += 0.02;
@@ -1448,6 +1485,47 @@ function drawEnemies() {
         ctx.lineTo(i * 11 + 4, 18);
         ctx.closePath(); ctx.fill();
       }
+    } else if (e.type === 'snake') {
+      ctx.scale(e.dir * 2, 2);
+      const fl = e.flash > 0;
+      for (let i = 6; i >= 1; i--) {
+        const sx = -i * 14;
+        const sy = Math.sin(frameNo * 0.15 - i * 0.9) * 6;
+        ctx.fillStyle = fl ? '#ffffff' : (i % 2 ? '#65a30d' : '#4d7c0f');
+        ctx.beginPath(); ctx.arc(sx, sy, 13 - i * 0.8, 0, 7); ctx.fill();
+      }
+      const hy = Math.sin(frameNo * 0.15) * 6;
+      ctx.fillStyle = fl ? '#ffffff' : '#84cc16';
+      ctx.beginPath(); ctx.arc(8, hy, 15, 0, 7); ctx.fill();
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath(); ctx.arc(13, hy - 5, 3.4, 0, 7); ctx.fill();
+      ctx.fillStyle = '#1a2e05';
+      ctx.beginPath(); ctx.arc(14, hy - 5, 1.5, 0, 7); ctx.fill();
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(22, hy); ctx.lineTo(30, hy + Math.sin(frameNo * 0.3) * 3); ctx.stroke();
+    } else if (e.type === 'scorpion') {
+      ctx.scale(e.dir * 2, 2);
+      const fl = e.flash > 0;
+      ctx.strokeStyle = '#431407';
+      ctx.lineWidth = 2;
+      for (let i = -1; i <= 1; i++) {
+        ctx.beginPath(); ctx.moveTo(i * 5, 5); ctx.lineTo(i * 5 + 2, 9); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(i * 5, -5); ctx.lineTo(i * 5 + 2, -9); ctx.stroke();
+      }
+      ctx.fillStyle = fl ? '#ffffff' : '#7c2d12';
+      ctx.beginPath(); ctx.ellipse(0, 0, 10, 7, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = fl ? '#ffffff' : '#9a3412';
+      ctx.beginPath(); ctx.arc(9, -6, 4, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(9, 6, 4, 0, 7); ctx.fill();
+      ctx.strokeStyle = fl ? '#ffffff' : '#9a3412';
+      ctx.lineWidth = 3;
+      const tw = Math.sin(frameNo * 0.2) * 3;
+      ctx.beginPath(); ctx.moveTo(-8, -2); ctx.lineTo(-14, -8 + tw); ctx.lineTo(-10, -13 + tw); ctx.stroke();
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath(); ctx.arc(-10, -13 + tw, 2.5, 0, 7); ctx.fill();
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(10, -3, 2, 2);
     } else if (e.type === 'turret') {
       const base = e.blue ? '#1e3a8a' : '#450a0a';
       const dome = e.blue ? '#1d4ed8' : '#7f1d1d';
@@ -1497,6 +1575,13 @@ function drawBullets() {
       ctx.moveTo(b.x - Math.cos(sa) * 7, b.y - Math.sin(sa) * 7);
       ctx.lineTo(b.x + Math.cos(sa) * 7, b.y + Math.sin(sa) * 7);
       ctx.stroke();
+    } else if (b.fire) {
+      ctx.fillStyle = 'rgba(249,115,22,0.4)';
+      ctx.beginPath(); ctx.arc(b.x, b.y, 8, 0, 7); ctx.fill();
+      ctx.fillStyle = '#f97316';
+      ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, 7); ctx.fill();
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath(); ctx.arc(b.x - b.vx * 0.5, b.y - b.vy * 0.5, 2.5, 0, 7); ctx.fill();
     } else if (b.tentacle) {
       ctx.strokeStyle = '#4ade80';
       ctx.lineWidth = 4;
@@ -1537,11 +1622,11 @@ function drawPlayer() {
     ctx.fillStyle = '#9ca3af';
     ctx.fillRect(-14, -6, 6, 12);
   }
-  ctx.fillStyle = suit ? '#e5e7eb' : water ? '#16a34a' : '#e8641c';
+  ctx.fillStyle = suit ? '#e5e7eb' : water ? '#16a34a' : '#eab308';
   ctx.fillRect(-8, -4, 16, 13);
-  ctx.fillStyle = suit ? '#6b7280' : water ? '#15803d' : '#c24e12';
+  ctx.fillStyle = suit ? '#6b7280' : water ? '#15803d' : '#a16207';
   ctx.fillRect(-8, 4, 16, 5);
-  ctx.fillStyle = suit ? '#d1d5db' : water ? '#4ade80' : '#f2a03d';
+  ctx.fillStyle = suit ? '#d1d5db' : water ? '#4ade80' : '#facc15';
   ctx.fillRect(-11, -5, 5, 7);
   ctx.fillRect(6, -5, 5, 7);
   ctx.fillStyle = suit ? '#f3f4f6' : '#e8e8f2';

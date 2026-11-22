@@ -284,7 +284,7 @@ function asciiPreview(label) {
       if (ch === ' ') {
         for (const e of G.enemies) {
           if (!e.dead && Math.floor((e.x + e.w / 2) / TILE) === x && Math.floor((e.y + e.h / 2) / TILE) === y) {
-            ch = e.type === 'walker' ? 'w' : e.type === 'flyer' ? 'f' : e.type === 'turret' ? 't' : e.type === 'fish' ? (e.big ? 'F' : 's') : e.type === 'robot' ? 'r' : e.type === 'alien' ? 'a' : e.type === 'boss' ? 'B' : e.type === 'hunter' ? 'X' : (e.big ? 'D' : 'd');
+            ch = e.type === 'walker' ? 'w' : e.type === 'flyer' ? 'f' : e.type === 'turret' ? 't' : e.type === 'fish' ? (e.big ? 'F' : 's') : e.type === 'robot' ? 'r' : e.type === 'alien' ? 'a' : e.type === 'boss' ? 'B' : e.type === 'hunter' ? 'X' : e.type === 'snake' ? 'S' : e.type === 'scorpion' ? 'k' : (e.big ? 'D' : 'd');
           }
         }
       }

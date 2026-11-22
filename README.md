@@ -20,7 +20,9 @@ HTML5 canvas + JavaScript. No build step, no dependencies — just open
 | C | **Jetpack**: fly for 10 s, then recharges over 5 s (JET fuel bar in HUD) |
 | D | **Rocket launcher**: 4× the damage of a normal shot, 10 s recharge (RCKT bar in HUD) |
 
-The player is twice as big as before; normal shots now deal half damage (0.5 per hit), rockets deal 4× that (2.0).
+The player is twice as big as before and wears a **yellow suit** (level 2 keeps the
+green/blue outfit, the space-station levels keep the white space suit); normal shots
+deal half damage (0.5 per hit), rockets deal 4× that (2.0).
 
 ## Features
 
@@ -51,9 +53,10 @@ The player is twice as big as before; normal shots now deal half damage (0.5 per
   floating platforms and spike pits together with **9 single-shot cannons** and
   **5 chasing wheels (Dreher)**; touching the alien costs **2 HP**. Reach the portal
   at the far end
-- Level 5 (desert): 10 single-shot cannons, 7 green tentacle aliens,
-  4 chasing Dreher wheels and one big Dreher near the end. The portal at the far
-  end wins the game
+- Level 5 (desert): all old units removed — instead a **giant snake** (192×64, 20 HP,
+  slithers after you, contact costs 2 HP, 800 pts) and **10 small scorpions** (40×32,
+  2 HP) that walk toward you and **shoot fire balls** (orange, aimed). The portal at
+  the far end wins the game
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
 - Animated fire & lava background everywhere (ember sky, basalt ridges, lava sea), screen shake, particles, floating score text
 - WebAudio chiptune-style sound effects (mutable with M)
