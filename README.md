@@ -39,7 +39,9 @@ The player is twice as big as before; normal shots now deal half damage (0.5 per
   (giant fish, 8 HP) near the end that fires an aimed shot every second, blue cannons
   that fire two shots per volley, and 5 ground robots that throw a boomerang disc
   at you which flies to you and returns to the robot
-- Level 3 (space station) mixes walkers, flyers, turrets, Dreher wheels and a big Dreher
+- Level 3 (space station) has no regular units — only a giant robot **boss** at the
+  end (128×128, 40 HP): it hovers toward you and fires a 16-way radial burst every
+  2 seconds; each of its bullets deals 2 HP damage. 5000 pts
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
 - Animated fire & lava background everywhere (ember sky, basalt ridges, lava sea), screen shake, particles, floating score text
 - WebAudio chiptune-style sound effects (mutable with M)
