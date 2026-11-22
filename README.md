@@ -46,9 +46,10 @@ The player is twice as big as before; normal shots now deal half damage (0.5 per
   At the end waits a giant robot **boss** (128×128, 40 HP): it hovers toward you and
   fires a 16-way radial burst every 2 seconds; each of its bullets deals 2 HP damage. 5000 pts
 - Level 4 (alien hive) is a chase/parkour level: a **giant immortal alien** (256×256,
-  cannot be killed — bullets just flash off it) hunts you through a course of floating
-  platforms and spike pits; touching it costs **2 HP**. Reach the portal at the far
-  end to win the game
+  2× speed, cannot be killed — bullets just flash off it) hunts you through a course of
+  floating platforms and spike pits together with **9 single-shot cannons** and
+  **5 chasing wheels (Dreher)**; touching the alien costs **2 HP**. Reach the portal
+  at the far end to win the game
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
 - Animated fire & lava background everywhere (ember sky, basalt ridges, lava sea), screen shake, particles, floating score text
 - WebAudio chiptune-style sound effects (mutable with M)

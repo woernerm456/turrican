@@ -232,6 +232,8 @@ function buildHuntLevel() {
   put(100, 9, 'o'); put(106, 6, 'O');
   put(118, 9, 'o'); put(124, 6, 'o');
   put(136, 9, 'H'); put(142, 6, 'o'); put(148, 10, 'o');
+  [12, 34, 50, 69, 86, 104, 122, 140, 150].forEach(x => put(x, 13, 't'));
+  [20, 45, 70, 100, 128].forEach(x => put(x, 13, 'd'));
   put(4, 4, 'X');
   put(3, 13, 'P');
   put(157, 13, 'G');
@@ -250,7 +252,7 @@ function spawnFromMap() {
       enemies.push({ type: 'flyer', x: x * TILE - 6, y: y * TILE - 2, baseY: y * TILE, w: 44, h: 36, dir: 1, hp: 1, flash: 0, t: 0 });
       map[y][x] = ' ';
     } else if (c === 't') {
-      enemies.push({ type: 'turret', blue: level === 2, double: level === 2, five: level >= 3, x: x * TILE - 12, y: y * TILE - 20, w: 56, h: 52, vx: 0, vy: 0, hp: 3, flash: 0, fire: 60 + Math.floor(Math.random() * 60), onGround: false });
+      enemies.push({ type: 'turret', blue: level === 2, double: level === 2, five: level === 3, x: x * TILE - 12, y: y * TILE - 20, w: 56, h: 52, vx: 0, vy: 0, hp: 3, flash: 0, fire: 60 + Math.floor(Math.random() * 60), onGround: false });
       map[y][x] = ' ';
     } else if (c === 'r') {
       enemies.push({ type: 'robot', x: x * TILE - 10, y: y * TILE - 20, w: 52, h: 52, vx: 0, vy: 0, dir: Math.random() < 0.5 ? -1 : 1, hp: 3, flash: 0, onGround: false, atkCd: 90 + Math.floor(Math.random() * 60) });
@@ -602,7 +604,7 @@ function updateEnemies() {
       const dx = player.x + player.w / 2 - (e.x + e.w / 2);
       const dy = player.y + player.h / 2 - (e.y + e.h / 2);
       const d = Math.hypot(dx, dy) || 1;
-      const spd = 1.15;
+      const spd = 2.3;
       e.x += dx / d * spd;
       e.y += dy / d * spd * 0.8;
       e.x = Math.max(TILE, Math.min(COLS * TILE - TILE - e.w, e.x));
