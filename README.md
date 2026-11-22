@@ -36,8 +36,7 @@ The player is twice as big as before; normal shots now deal half damage (0.5 per
   big windows with a starry sky and a planet, blinking lights, metal floor; the
   player wears a white space suit with helmet visor and backpack), level 4 an
   alien hive (dark violet/green cavern with glowing spore blobs and green ridges),
-  level 5 a second, bigger space-station sector (same station look, new layout,
-  player in space suit again)
+  level 5 a desert (blue sky, big sun, clouds, sand dunes, sand-brick platforms)
 - Level 2 enemies: green fish that swim at you and bite on contact, a "Riesen-Fisch"
   (giant fish, 8 HP) near the end that fires an aimed shot every second, blue cannons
   that fire two shots per volley, and 5 ground robots that throw a boomerang disc
@@ -52,7 +51,7 @@ The player is twice as big as before; normal shots now deal half damage (0.5 per
   floating platforms and spike pits together with **9 single-shot cannons** and
   **5 chasing wheels (Dreher)**; touching the alien costs **2 HP**. Reach the portal
   at the far end
-- Level 5 (space station again): 10 single-shot cannons, 7 green tentacle aliens,
+- Level 5 (desert): 10 single-shot cannons, 7 green tentacle aliens,
   4 chasing Dreher wheels and one big Dreher near the end. The portal at the far
   end wins the game
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
