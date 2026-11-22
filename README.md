@@ -53,10 +53,12 @@ deal half damage (0.5 per hit), rockets deal 4× that (2.0).
   floating platforms and spike pits together with **9 single-shot cannons** and
   **5 chasing wheels (Dreher)**; touching the alien costs **2 HP**. Reach the portal
   at the far end
-- Level 5 (desert): all old units removed — instead a **giant snake** (192×64, 20 HP,
-  slithers after you, contact costs 2 HP, 800 pts) and **10 small scorpions** (40×32,
-  2 HP) that walk toward you and **shoot fire balls** (orange, aimed). The portal at
-  the far end wins the game
+- Level 5 (desert): all old units removed — instead a **giant serpent** (192×64, 20 HP,
+  long S-curved segmented body with eyes and forked tongue; slithers after you,
+  contact costs 2 HP, 800 pts), **10 small scorpions** (40×32, 2 HP) that walk toward
+  you and shoot aimed fire balls, and **10 flying dragons** (64×48, 4 HP, red with
+  flapping wings) that chase you and shoot big red **fireballs dealing 3 HP damage**.
+  The portal at the far end wins the game
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
 - Animated fire & lava background everywhere (ember sky, basalt ridges, lava sea), screen shake, particles, floating score text
 - WebAudio chiptune-style sound effects (mutable with M)
