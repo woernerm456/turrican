@@ -30,11 +30,12 @@ The player is twice as big as before; normal shots now deal half damage (0.5 per
 - 4 enemy types: ground walkers, flying bats, aimed turrets, and "Dreher"
   wheels — rotating dark-red wheels that chase you and fire radial bursts in all 8 directions
 - plus a big "Dreher" near the end of each level: double HP (8), fires 3x as fast, 1000 pts
-- Three levels, each reached through a portal: level 1 lava sector, level 2 a
+- Four levels, each reached through a portal: level 1 lava sector, level 2 a
   flooded water sector (blue water background, light rays, bubbles, sand floor;
   the player wears a green/blue outfit there), level 3 a space station (dark hull,
   big windows with a starry sky and a planet, blinking lights, metal floor; the
-  player wears a white space suit with helmet visor and backpack)
+  player wears a white space suit with helmet visor and backpack), level 4 an
+  alien hive (dark violet/green cavern with glowing spore blobs and green ridges)
 - Level 2 enemies: green fish that swim at you and bite on contact, a "Riesen-Fisch"
   (giant fish, 8 HP) near the end that fires an aimed shot every second, blue cannons
   that fire two shots per volley, and 5 ground robots that throw a boomerang disc
@@ -44,11 +45,15 @@ The player is twice as big as before; normal shots now deal half damage (0.5 per
   tentacle deals **2 HP damage** and has a range of 2 cm ≈ 2 tiles = **64 px**.
   At the end waits a giant robot **boss** (128×128, 40 HP): it hovers toward you and
   fires a 16-way radial burst every 2 seconds; each of its bullets deals 2 HP damage. 5000 pts
+- Level 4 (alien hive) is a chase/parkour level: a **giant immortal alien** (256×256,
+  cannot be killed — bullets just flash off it) hunts you through a course of floating
+  platforms and spike pits; touching it costs **2 HP**. Reach the portal at the far
+  end to win the game
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
 - Animated fire & lava background everywhere (ember sky, basalt ridges, lava sea), screen shake, particles, floating score text
 - WebAudio chiptune-style sound effects (mutable with M)
 - HUD with hearts, lives, weapon level and score; title, pause, dying, game-over and win screens
-- One hand-designed level (~160 tiles wide) ending in a portal
+- Four hand-designed levels (~160 tiles wide each) ending in a portal
 
 ## Files
 

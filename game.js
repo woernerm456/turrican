@@ -61,9 +61,10 @@ const sfx = {
   win() { [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => beep(f, 0.14, 'square', 0.09), i * 110)); },
 };
 
-function theme() { return level === 2 ? 'water' : level >= 3 ? 'station' : 'lava'; }
+function theme() { return level === 2 ? 'water' : level === 3 ? 'station' : level >= 4 ? 'hive' : 'lava'; }
 
 function buildLevel(n) {
+  if (n >= 4) return buildHuntLevel();
   if (n >= 3) return buildStationLevel();
   if (n === 2) return buildWaterLevel();
   return buildLavaLevel();
@@ -201,6 +202,42 @@ function buildStationLevel() {
   return g;
 }
 
+function buildHuntLevel() {
+  const g = Array.from({ length: ROWS }, () => Array(COLS).fill(' '));
+  const fill = (x, y, w, h, c) => {
+    for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) {
+      if (i >= 0 && i < COLS && j >= 0 && j < ROWS) g[j][i] = c;
+    }
+  };
+  const plat = (x, y, w) => fill(x, y, w, 1, '#');
+  const put = (x, y, c) => { g[y][x] = c; };
+  fill(0, 15, COLS, 2, '#');
+  fill(0, 0, 1, ROWS, '#');
+  fill(COLS - 2, 0, 2, ROWS, '#');
+  [[24, 5], [40, 5], [58, 5], [76, 5], [94, 5], [112, 5], [130, 5]].forEach(([px, pw]) => {
+    fill(px, 15, pw, 1, ' ');
+    fill(px, 16, pw, 1, '^');
+  });
+  plat(7, 12, 3); plat(13, 9, 3); plat(19, 12, 3);
+  plat(30, 10, 3); plat(36, 7, 3); plat(45, 11, 3); plat(51, 8, 3);
+  plat(63, 11, 3); plat(69, 8, 3); plat(73, 12, 3);
+  plat(81, 10, 3); plat(87, 7, 3); plat(93, 12, 3);
+  plat(99, 10, 3); plat(105, 7, 3); plat(111, 12, 3);
+  plat(117, 10, 3); plat(123, 7, 3); plat(129, 12, 3);
+  plat(135, 10, 3); plat(141, 7, 3); plat(147, 11, 3); plat(152, 9, 3);
+  put(8, 11, 'o'); put(14, 8, 'o'); put(20, 11, 'o');
+  put(31, 9, 'o'); put(37, 6, 'O'); put(46, 10, 'o'); put(52, 7, 'o');
+  put(64, 10, 'o'); put(70, 7, 'H'); put(74, 11, 'o');
+  put(82, 9, 'o'); put(88, 6, 'o');
+  put(100, 9, 'o'); put(106, 6, 'O');
+  put(118, 9, 'o'); put(124, 6, 'o');
+  put(136, 9, 'H'); put(142, 6, 'o'); put(148, 10, 'o');
+  put(4, 4, 'X');
+  put(3, 13, 'P');
+  put(157, 13, 'G');
+  return g;
+}
+
 function spawnFromMap() {
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
     const c = map[y][x];
@@ -226,6 +263,9 @@ function spawnFromMap() {
       map[y][x] = ' ';
     } else if (c === 'a') {
       enemies.push({ type: 'alien', x: x * TILE - 10, y: y * TILE - 20, w: 52, h: 52, vx: 0, vy: 0, dir: Math.random() < 0.5 ? -1 : 1, hp: 3, flash: 0, onGround: false, atkCd: 80 + Math.floor(Math.random() * 60) });
+      map[y][x] = ' ';
+    } else if (c === 'X') {
+      enemies.push({ type: 'hunter', x: x * TILE - 96, y: y * TILE - 96, w: 256, h: 256, dir: 1, hp: 999999, immortal: true, flash: 0, t: 0 });
       map[y][x] = ' ';
     } else if (c === 'B') {
       enemies.push({ type: 'boss', x: x * TILE - 48, y: y * TILE - 20, baseY: y * TILE - 20, w: 128, h: 128, dir: -1, hp: 40, flash: 0, t: 0, rot: 0, fire: 120 });
@@ -443,8 +483,8 @@ function checkEnemyContact(p) {
     if (e.dead) continue;
     if (p.x < e.x + e.w && p.x + p.w > e.x && p.y < e.y + e.h && p.y + p.h > e.y) {
       const cx = (p.x + p.w / 2) - (e.x + e.w / 2);
-      hurt(1, (cx < 0 ? -1 : 1) * 5, -7);
-      if (e.type !== 'turret') {
+      hurt(e.type === 'hunter' ? 2 : 1, (cx < 0 ? -1 : 1) * 5, -7);
+      if (e.type !== 'turret' && !e.immortal) {
         e.hp--;
         e.flash = 6;
         if (e.hp <= 0) killEnemy(e);
@@ -557,6 +597,17 @@ function updateEnemies() {
         if (ebullets.length < 40) ebullets.push({ x: e.x + e.w / 2 + Math.cos(a) * 26, y: e.y + e.h / 2 + Math.sin(a) * 26, vx: Math.cos(a) * 4, vy: Math.sin(a) * 4, dmg: 2, range: 64, dist: 0, tentacle: true });
         sfx.eshoot();
       }
+    } else if (e.type === 'hunter') {
+      e.t++;
+      const dx = player.x + player.w / 2 - (e.x + e.w / 2);
+      const dy = player.y + player.h / 2 - (e.y + e.h / 2);
+      const d = Math.hypot(dx, dy) || 1;
+      const spd = 1.15;
+      e.x += dx / d * spd;
+      e.y += dy / d * spd * 0.8;
+      e.x = Math.max(TILE, Math.min(COLS * TILE - TILE - e.w, e.x));
+      e.y = Math.max(TILE, Math.min(ROWS * TILE - e.h - TILE, e.y));
+      if (Math.abs(dx) > 4) e.dir = dx < 0 ? -1 : 1;
     } else if (e.type === 'boss') {
       e.t++;
       e.rot += 0.02;
@@ -629,7 +680,7 @@ function updateBullets() {
       if (e.dead) continue;
       if (b.x > e.x - 6 && b.x < e.x + e.w + 6 && b.y > e.y - 6 && b.y < e.y + e.h + 6) {
         b.dead = true;
-        e.hp -= b.rocket ? 4 * BULLET_DMG : BULLET_DMG;
+        if (!e.immortal) e.hp -= b.rocket ? 4 * BULLET_DMG : BULLET_DMG;
         e.flash = 6;
         if (e.type === 'walker') e.vx += b.vx * 0.15;
         if (b.rocket) {
@@ -640,7 +691,7 @@ function updateBullets() {
         } else {
           burst(b.x, b.y, 5, '#ffffff');
         }
-        if (e.hp <= 0) killEnemy(e);
+        if (!e.immortal && e.hp <= 0) killEnemy(e);
         break;
       }
     }
@@ -698,7 +749,7 @@ function updatePickups() {
 function checkGoal() {
   const p = player;
   if (goal && p.x < goal.x + goal.w && p.x + p.w > goal.x && p.y < goal.y + goal.h && p.y + p.h > goal.y) {
-    if (level >= 3) {
+    if (level >= 4) {
       state = 'win';
       score += 1000 + lives * 500;
     } else {
@@ -825,7 +876,7 @@ function frac(v) { return v - Math.floor(v); }
 
 function makeSky(theme) {
   const arr = [];
-  const cols = theme === 'water' ? ['#bfefff', '#67e8f9', '#e0f2fe', '#38bdf8'] : theme === 'station' ? ['#e2e8f0', '#7dd3fc', '#ffffff', '#93c5fd'] : ['#ffd23d', '#ff9a1f', '#ff6a00', '#ff3d00'];
+  const cols = theme === 'water' ? ['#bfefff', '#67e8f9', '#e0f2fe', '#38bdf8'] : theme === 'station' ? ['#e2e8f0', '#7dd3fc', '#ffffff', '#93c5fd'] : theme === 'hive' ? ['#4ade80', '#a3e635', '#bbf7d0', '#22d3ee'] : ['#ffd23d', '#ff9a1f', '#ff6a00', '#ff3d00'];
   for (let i = 0; i < 130; i++) {
     arr.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() < 0.6 ? 2 : 3, p: Math.random() * 6.28, vy: 0.2 + Math.random() * 0.7, c: cols[(Math.random() * cols.length) | 0] });
   }
@@ -842,6 +893,10 @@ function drawBG() {
   } else if (th === 'station') {
     g.addColorStop(0, '#050510');
     g.addColorStop(1, '#0d0d24');
+  } else if (th === 'hive') {
+    g.addColorStop(0, '#0b0316');
+    g.addColorStop(0.6, '#170a2b');
+    g.addColorStop(1, '#07130b');
   } else {
     g.addColorStop(0, '#2a0700');
     g.addColorStop(0.45, '#6b1a00');
@@ -867,6 +922,18 @@ function drawBG() {
     ridge(0.35, 200, 150, '#04263b', '#22d3ee');
     ridge(0.6, 260, 110, '#062f4d', '#67e8f9');
     drawSand();
+  } else if (th === 'hive') {
+    ridge(0.35, 220, 160, '#0c1a10', '#4ade80');
+    ridge(0.6, 280, 120, '#0a140c', '#22c55e');
+    for (let i = 0; i < 6; i++) {
+      const bx = ((i * 260 - cam.x * 0.3) % (W + 200) + W + 200) % (W + 200) - 100;
+      const by = 120 + ((i * 173) % 260);
+      const r = 26 + Math.sin(frameNo * 0.03 + i * 2) * 6 + i * 6;
+      ctx.fillStyle = 'rgba(34,197,94,0.10)';
+      ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
+      ctx.fillStyle = 'rgba(163,230,53,0.14)';
+      ctx.beginPath(); ctx.arc(bx, by, r * 0.5, 0, 7); ctx.fill();
+    }
   } else if (th !== 'station') {
     ridge(0.35, 200, 150, '#200502', '#ff5a00');
     ridge(0.6, 260, 110, '#330a03', '#ff8a00');
@@ -1270,6 +1337,41 @@ function drawEnemies() {
       ctx.fillStyle = fl ? '#ffffff' : '#14532d';
       ctx.fillRect(-6, 8, 4, 4);
       ctx.fillRect(2, 8, 4, 4);
+    } else if (e.type === 'hunter') {
+      ctx.scale(e.dir * 2, 2);
+      const fl = e.flash > 0;
+      const wob = Math.sin(frameNo * 0.06 + e.t) * 4;
+      ctx.strokeStyle = fl ? '#ffffff' : '#15803d';
+      ctx.lineWidth = 6;
+      for (let i = 0; i < 6; i++) {
+        const a = -Math.PI * 0.75 + i * (Math.PI * 1.5 / 5) + Math.sin(frameNo * 0.05 + i) * 0.15;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * 40, Math.sin(a) * 40 + 10);
+        ctx.lineTo(Math.cos(a) * 58, Math.sin(a) * 58 + 14 + wob);
+        ctx.lineTo(Math.cos(a) * 72, Math.sin(a) * 70 + 20 - wob);
+        ctx.stroke();
+      }
+      ctx.fillStyle = fl ? '#ffffff' : '#16a34a';
+      ctx.beginPath(); ctx.ellipse(0, 0, 62, 54, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = fl ? '#ffffff' : '#22c55e';
+      ctx.beginPath(); ctx.ellipse(0, -18, 46, 34, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath(); ctx.arc(-20, -24, 12, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(20, -24, 12, 0, 7); ctx.fill();
+      const look = player ? Math.sign((player.x + player.w / 2) - (e.x + e.w / 2)) : 0;
+      ctx.fillStyle = '#7f1d1d';
+      ctx.beginPath(); ctx.arc(-20 + look * 4, -24, 5, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.arc(20 + look * 4, -24, 5, 0, 7); ctx.fill();
+      ctx.fillStyle = '#052e16';
+      ctx.beginPath(); ctx.ellipse(0, 18, 30, 14, 0, 0, Math.PI); ctx.fill();
+      ctx.fillStyle = '#f8fafc';
+      for (let i = -2; i <= 2; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * 11 - 4, 18);
+        ctx.lineTo(i * 11, 28);
+        ctx.lineTo(i * 11 + 4, 18);
+        ctx.closePath(); ctx.fill();
+      }
     } else if (e.type === 'turret') {
       const base = e.blue ? '#1e3a8a' : '#450a0a';
       const dome = e.blue ? '#1d4ed8' : '#7f1d1d';
@@ -1580,6 +1682,8 @@ if (typeof window !== 'undefined') {
     get enemies() { return enemies; },
     get level() { return level; },
     get ebullets() { return ebullets; },
+    get bullets() { return bullets; },
+    get goal() { return goal; },
     solidAt(tx, ty) { return solid(tx, ty); },
   };
 }
