@@ -193,6 +193,8 @@ function buildStationLevel() {
   put(119, 9, 'o'); put(120, 9, 'o'); put(127, 7, 'O');
   put(137, 10, 'o'); put(145, 7, 'H');
   put(150, 13, 'o'); put(151, 13, 'o');
+  [12, 26, 33, 44, 55, 63, 70, 88, 100, 118].forEach(x => put(x, 13, 't'));
+  [18, 38, 60, 90, 105, 130].forEach(x => put(x, 13, 'a'));
   put(150, 7, 'B');
   put(3, 13, 'P');
   put(157, 13, 'G');
@@ -211,7 +213,7 @@ function spawnFromMap() {
       enemies.push({ type: 'flyer', x: x * TILE - 6, y: y * TILE - 2, baseY: y * TILE, w: 44, h: 36, dir: 1, hp: 1, flash: 0, t: 0 });
       map[y][x] = ' ';
     } else if (c === 't') {
-      enemies.push({ type: 'turret', blue: level === 2, double: level === 2, x: x * TILE - 12, y: y * TILE - 20, w: 56, h: 52, vx: 0, vy: 0, hp: 3, flash: 0, fire: 60 + Math.floor(Math.random() * 60), onGround: false });
+      enemies.push({ type: 'turret', blue: level === 2, double: level === 2, five: level >= 3, x: x * TILE - 12, y: y * TILE - 20, w: 56, h: 52, vx: 0, vy: 0, hp: 3, flash: 0, fire: 60 + Math.floor(Math.random() * 60), onGround: false });
       map[y][x] = ' ';
     } else if (c === 'r') {
       enemies.push({ type: 'robot', x: x * TILE - 10, y: y * TILE - 20, w: 52, h: 52, vx: 0, vy: 0, dir: Math.random() < 0.5 ? -1 : 1, hp: 3, flash: 0, onGround: false, atkCd: 90 + Math.floor(Math.random() * 60) });
@@ -221,6 +223,9 @@ function spawnFromMap() {
       map[y][x] = ' ';
     } else if (c === 'F') {
       enemies.push({ type: 'fish', big: true, x: x * TILE - 48, y: y * TILE - 20, baseY: y * TILE, w: 128, h: 72, dir: -1, hp: 8, flash: 0, t: 0, fire: 60 });
+      map[y][x] = ' ';
+    } else if (c === 'a') {
+      enemies.push({ type: 'alien', x: x * TILE - 10, y: y * TILE - 20, w: 52, h: 52, vx: 0, vy: 0, dir: Math.random() < 0.5 ? -1 : 1, hp: 3, flash: 0, onGround: false, atkCd: 80 + Math.floor(Math.random() * 60) });
       map[y][x] = ' ';
     } else if (c === 'B') {
       enemies.push({ type: 'boss', x: x * TILE - 48, y: y * TILE - 20, baseY: y * TILE - 20, w: 128, h: 128, dir: -1, hp: 40, flash: 0, t: 0, rot: 0, fire: 120 });
@@ -451,9 +456,9 @@ function checkEnemyContact(p) {
 
 function killEnemy(e) {
   e.dead = true;
-  const pts = e.type === 'turret' ? 300 : e.type === 'flyer' ? 150 : e.type === 'dreher' ? (e.big ? 1000 : 400) : e.type === 'fish' ? (e.big ? 1200 : 200) : e.type === 'robot' ? 250 : e.type === 'boss' ? 5000 : 100;
+  const pts = e.type === 'turret' ? 300 : e.type === 'flyer' ? 150 : e.type === 'dreher' ? (e.big ? 1000 : 400) : e.type === 'fish' ? (e.big ? 1200 : 200) : e.type === 'robot' ? 250 : e.type === 'alien' ? 250 : e.type === 'boss' ? 5000 : 100;
   score += pts;
-  burst(e.x + e.w / 2, e.y + e.h / 2, e.type === 'boss' ? 40 : e.big ? 30 : 18, e.type === 'fish' ? '#4ade80' : e.type === 'flyer' ? '#f87171' : e.type === 'robot' ? '#94a3b8' : e.type === 'boss' ? '#ff3b5c' : '#dc2626');
+  burst(e.x + e.w / 2, e.y + e.h / 2, e.type === 'boss' ? 40 : e.big ? 30 : 18, e.type === 'fish' ? '#4ade80' : e.type === 'flyer' ? '#f87171' : e.type === 'robot' ? '#94a3b8' : e.type === 'alien' ? '#4ade80' : e.type === 'boss' ? '#ff3b5c' : '#dc2626');
   addText('+' + pts, e.x + e.w / 2, e.y, '#7dd3fc');
   sfx.boom();
   shake = Math.max(shake, 6);
@@ -533,6 +538,25 @@ function updateEnemies() {
         }
         sfx.eshoot();
       }
+    } else if (e.type === 'alien') {
+      e.vy = Math.min(MAXFALL, e.vy + GRAV);
+      e.vx = e.dir * 0.7;
+      const hitWall = moveAndCollide(e);
+      if (hitWall) e.dir *= -1;
+      if (e.onGround) {
+        const aheadX = e.dir > 0 ? e.x + e.w + 3 : e.x - 3;
+        if (!solid(Math.floor(aheadX / TILE), Math.floor((e.y + e.h + 4) / TILE))) e.dir *= -1;
+      }
+      e.atkCd--;
+      const dx = player.x + player.w / 2 - (e.x + e.w / 2);
+      const dy = player.y + player.h / 2 - (e.y + e.h / 2);
+      const d = Math.hypot(dx, dy);
+      if (e.atkCd <= 0 && d < 110 && Math.abs(dy) < 90 && state === 'play') {
+        e.atkCd = 100;
+        const a = Math.atan2(dy, dx);
+        if (ebullets.length < 40) ebullets.push({ x: e.x + e.w / 2 + Math.cos(a) * 26, y: e.y + e.h / 2 + Math.sin(a) * 26, vx: Math.cos(a) * 4, vy: Math.sin(a) * 4, dmg: 2, range: 64, dist: 0, tentacle: true });
+        sfx.eshoot();
+      }
     } else if (e.type === 'boss') {
       e.t++;
       e.rot += 0.02;
@@ -563,7 +587,7 @@ function updateEnemies() {
       if (e.fire <= 0 && d < 430 && state === 'play') {
         e.fire = e.double ? 150 : 130;
         const a = Math.atan2(dy, dx);
-        const offs = e.double ? [-0.15, 0.15] : [0];
+        const offs = e.five ? [-0.3, -0.15, 0, 0.15, 0.3] : e.double ? [-0.15, 0.15] : [0];
         for (const off of offs) {
           if (ebullets.length < 40) ebullets.push({ x: e.x + e.w / 2, y: e.y + e.h / 2 - 4, vx: Math.cos(a + off) * 4.6, vy: Math.sin(a + off) * 4.6 });
         }
@@ -623,6 +647,10 @@ function updateBullets() {
   }
   bullets = bullets.filter(b => !b.dead && b.x > cam.x - 40 && b.x < cam.x + W + 40 && b.y > -20 && b.y < ROWS * TILE + 20);
   for (const b of ebullets) {
+    if (b.range) {
+      b.dist = (b.dist || 0) + Math.hypot(b.vx, b.vy);
+      if (b.dist >= b.range) { b.dead = true; burst(b.x, b.y, 3, '#4ade80'); }
+    }
     if (b.boom) {
       b.t++;
       if (b.t > 35 && b.owner && !b.owner.dead) {
@@ -1217,6 +1245,31 @@ function drawEnemies() {
       ctx.fillStyle = '#fbbf24';
       ctx.fillRect(-6, -32, 5, 4);
       ctx.fillRect(2, -32, 5, 4);
+    } else if (e.type === 'alien') {
+      ctx.scale(e.dir * 2, 2);
+      const fl = e.flash > 0;
+      const wob = Math.sin(frameNo * 0.08 + e.x) * 2;
+      ctx.strokeStyle = fl ? '#ffffff' : '#16a34a';
+      ctx.lineWidth = 3;
+      for (let i = 0; i < 4; i++) {
+        const a = Math.PI / 4 + i * Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * 12, Math.sin(a) * 12);
+        ctx.lineTo(Math.cos(a) * 20, Math.sin(a) * 20 + wob);
+        ctx.lineTo(Math.cos(a) * 26, Math.sin(a) * 26 - wob);
+        ctx.stroke();
+      }
+      ctx.fillStyle = fl ? '#ffffff' : '#22c55e';
+      ctx.beginPath(); ctx.ellipse(0, 0, 13, 11, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = fl ? '#ffffff' : '#4ade80';
+      ctx.beginPath(); ctx.ellipse(0, -4, 9, 7, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath(); ctx.arc(4, -5, 3.5, 0, 7); ctx.fill();
+      ctx.fillStyle = '#052e16';
+      ctx.beginPath(); ctx.arc(5, -5, 1.6, 0, 7); ctx.fill();
+      ctx.fillStyle = fl ? '#ffffff' : '#14532d';
+      ctx.fillRect(-6, 8, 4, 4);
+      ctx.fillRect(2, 8, 4, 4);
     } else if (e.type === 'turret') {
       const base = e.blue ? '#1e3a8a' : '#450a0a';
       const dome = e.blue ? '#1d4ed8' : '#7f1d1d';
@@ -1266,6 +1319,17 @@ function drawBullets() {
       ctx.moveTo(b.x - Math.cos(sa) * 7, b.y - Math.sin(sa) * 7);
       ctx.lineTo(b.x + Math.cos(sa) * 7, b.y + Math.sin(sa) * 7);
       ctx.stroke();
+    } else if (b.tentacle) {
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(b.x - b.vx * 2, b.y - b.vy * 2);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, 7); ctx.fill();
+      ctx.fillStyle = '#bbf7d0';
+      ctx.beginPath(); ctx.arc(b.x, b.y, 2.2, 0, 7); ctx.fill();
     } else {
       const rr = b.dmg === 2 ? 6 : 4;
       ctx.fillStyle = 'rgba(255,60,80,0.35)';
