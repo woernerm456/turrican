@@ -30,12 +30,14 @@ The player is twice as big as before; normal shots now deal half damage (0.5 per
 - 4 enemy types: ground walkers, flying bats, aimed turrets, and "Dreher"
   wheels — rotating dark-red wheels that chase you and fire radial bursts in all 8 directions
 - plus a big "Dreher" near the end of each level: double HP (8), fires 3x as fast, 1000 pts
-- Four levels, each reached through a portal: level 1 lava sector, level 2 a
+- Five levels, each reached through a portal: level 1 lava sector, level 2 a
   flooded water sector (blue water background, light rays, bubbles, sand floor;
   the player wears a green/blue outfit there), level 3 a space station (dark hull,
   big windows with a starry sky and a planet, blinking lights, metal floor; the
   player wears a white space suit with helmet visor and backpack), level 4 an
-  alien hive (dark violet/green cavern with glowing spore blobs and green ridges)
+  alien hive (dark violet/green cavern with glowing spore blobs and green ridges),
+  level 5 a second, bigger space-station sector (same station look, new layout,
+  player in space suit again)
 - Level 2 enemies: green fish that swim at you and bite on contact, a "Riesen-Fisch"
   (giant fish, 8 HP) near the end that fires an aimed shot every second, blue cannons
   that fire two shots per volley, and 5 ground robots that throw a boomerang disc
@@ -49,12 +51,15 @@ The player is twice as big as before; normal shots now deal half damage (0.5 per
   cannot be killed — bullets just flash off it) hunts you through a course of
   floating platforms and spike pits together with **9 single-shot cannons** and
   **5 chasing wheels (Dreher)**; touching the alien costs **2 HP**. Reach the portal
-  at the far end to win the game
+  at the far end
+- Level 5 (space station again): 10 single-shot cannons, 7 green tentacle aliens,
+  4 chasing Dreher wheels and one big Dreher near the end. The portal at the far
+  end wins the game
 - Spike pits, score orbs, big orbs, health pickups, weapon upgrades
 - Animated fire & lava background everywhere (ember sky, basalt ridges, lava sea), screen shake, particles, floating score text
 - WebAudio chiptune-style sound effects (mutable with M)
 - HUD with hearts, lives, weapon level and score; title, pause, dying, game-over and win screens
-- Four hand-designed levels (~160 tiles wide each) ending in a portal
+- Five hand-designed levels (~160 tiles wide each) ending in a portal
 
 ## Files
 

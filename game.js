@@ -61,9 +61,10 @@ const sfx = {
   win() { [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => beep(f, 0.14, 'square', 0.09), i * 110)); },
 };
 
-function theme() { return level === 2 ? 'water' : level === 3 ? 'station' : level >= 4 ? 'hive' : 'lava'; }
+function theme() { return level === 2 ? 'water' : level === 4 ? 'hive' : level >= 3 ? 'station' : 'lava'; }
 
 function buildLevel(n) {
+  if (n >= 5) return buildStationLevel2();
   if (n >= 4) return buildHuntLevel();
   if (n >= 3) return buildStationLevel();
   if (n === 2) return buildWaterLevel();
@@ -235,6 +236,41 @@ function buildHuntLevel() {
   [12, 34, 50, 69, 86, 104, 122, 140, 150].forEach(x => put(x, 13, 't'));
   [20, 45, 70, 100, 128].forEach(x => put(x, 13, 'd'));
   put(4, 4, 'X');
+  put(3, 13, 'P');
+  put(157, 13, 'G');
+  return g;
+}
+
+function buildStationLevel2() {
+  const g = Array.from({ length: ROWS }, () => Array(COLS).fill(' '));
+  const fill = (x, y, w, h, c) => {
+    for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) {
+      if (i >= 0 && i < COLS && j >= 0 && j < ROWS) g[j][i] = c;
+    }
+  };
+  const plat = (x, y, w) => fill(x, y, w, 1, '#');
+  const put = (x, y, c) => { g[y][x] = c; };
+  fill(0, 15, COLS, 2, '#');
+  fill(0, 0, 1, ROWS, '#');
+  fill(COLS - 2, 0, 2, ROWS, '#');
+  [[18, 4], [46, 4], [74, 4], [102, 4], [126, 4]].forEach(([px, pw]) => {
+    fill(px, 15, pw, 1, ' ');
+    fill(px, 16, pw, 1, '^');
+  });
+  plat(6, 11, 3); plat(13, 8, 4);
+  plat(24, 10, 4); plat(31, 7, 3); plat(38, 10, 3);
+  fill(42, 12, 2, 3, '#');
+  plat(52, 9, 3); plat(60, 12, 3); plat(66, 8, 4);
+  plat(82, 11, 3); plat(90, 8, 3); plat(98, 12, 3);
+  plat(108, 9, 4); plat(116, 12, 3); plat(122, 8, 3);
+  plat(132, 11, 3); plat(140, 8, 3); plat(148, 11, 3);
+  [10, 26, 38, 54, 66, 82, 94, 112, 134, 146].forEach(x => put(x, 13, 't'));
+  [14, 32, 58, 86, 108, 122, 140].forEach(x => put(x, 13, 'a'));
+  [24, 62, 90, 118].forEach(x => put(x, 13, 'd'));
+  put(136, 13, 'D');
+  put(7, 10, 'o'); put(14, 7, 'O'); put(25, 9, 'o'); put(32, 6, 'o'); put(39, 9, 'H');
+  put(53, 8, 'o'); put(67, 7, 'O'); put(83, 10, 'o'); put(91, 7, 'o'); put(109, 8, 'o');
+  put(123, 7, 'H'); put(141, 7, 'o'); put(149, 10, 'o');
   put(3, 13, 'P');
   put(157, 13, 'G');
   return g;
@@ -751,7 +787,7 @@ function updatePickups() {
 function checkGoal() {
   const p = player;
   if (goal && p.x < goal.x + goal.w && p.x + p.w > goal.x && p.y < goal.y + goal.h && p.y + p.h > goal.y) {
-    if (level >= 4) {
+    if (level >= 5) {
       state = 'win';
       score += 1000 + lives * 500;
     } else {
@@ -1686,6 +1722,7 @@ if (typeof window !== 'undefined') {
     get ebullets() { return ebullets; },
     get bullets() { return bullets; },
     get goal() { return goal; },
+    get theme() { return theme(); },
     solidAt(tx, ty) { return solid(tx, ty); },
   };
 }
